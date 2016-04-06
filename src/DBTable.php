@@ -1,0 +1,827 @@
+<?php
+//Never set LOG_LEVEL != LOG_LEVEL_TRACE inside this class
+//it breaks the internet
+namespace AKOU;
+
+
+class DBTable
+{
+
+	public static $connection	= NULL;
+	const TRIM_ON_SAVE			= 1;
+	const INT_VALUE				= 2;	// ✓
+	const STRING_VALUE			= 5;	// ✓
+	const EMAIL_VALUE			= 9; //8 + 1 TRIM_ON_SAVE ✓
+	const DOMAIN_VALUE			= 17; //16 + 1 TRIM_ON_SAVE ✓
+	const URL_VALUE				= 33; //32 + 1 TRIM_ON_SAVE ✗	//Not implemented YET
+	const TIMESTAMP_VALUE		= 64; // ✓
+	const PHONE_VALUE			= 129; //128 + 1 TRIM_ON_SAVE ✓
+	const ENUM_VALUE			= 256; // ✓
+	const FLOAT_VALUE			= 512; // ✓
+	const IGNORE_ON_INSERT		= 1024; //
+	const IGNORE_ON_UPDATE		= 2048;
+	const REQUIRED_ON_INSERT	= 4096;
+	const REQUIRED_ON_UPDATE	= 8192;
+
+	const CREDIT_CARD_VALUE	 	= 16384;
+	const DIGITS_VALUE			= 32768; //ONLY DIGITS STRINGS like for example '00012'; OR
+	const TIMESTAMP_ON_CREATE	= 65536; //✓
+	const DONT_EXPORT_EXTERNAL	= 131072;
+	const TIME_VALUE			= 262144;
+
+	 //Dont add to array when is calle $obj->toArrayExclude()
+	//const NO_NULL				=	131072; //Cant be set 'NULL'	//not implemented yet
+	//const NO_EMPTY				=	262144; //Cant be set 'EMPTY' //cant be set 'NULL' OR 'EMPTY'
+
+	//
+	const DISCOUNTINUED		 =	131072; //DO_NOT_EXPORT_EXTERNAL
+	const IS_SENSITIVE_DATA	 =	131072; //DO_NOT_EXPORT_EXTERNAL
+
+	const REQUIRED_ON_SAVE		=	6144;//REQUIRED_ON_INSERT |	REQUIRED_ON_UPDATE;
+	const IGNORE_ON_SAVE		=	1536;//IGNORE_ON_INSERT	|	IGNORE_ON_UPDATE;	//No sav ed on insert or update //only read value like an autoincrement or on update CURRENT_TIMESTAMP
+	//const NO_EXPORT
+
+/*
+20 = 1
+21 = 2
+22 = 4
+23 = 8
+24 = 16
+25 = 32
+26 = 64
+27 = 128
+28 = 256
+29 = 512
+210 = 1024
+211 = 2048
+212 = 4096
+213 = 8192
+214 = 16384
+215 = 32768
+216 = 65536
+217 = 131072
+218 = 262144
+219 = 524288
+220 = 1048576
+221 = 2097152
+222 = 4194304
+223 = 8388608
+224 = 16777216
+225 = 33554432
+226 = 67108864
+227 = 134217728
+228 = 268435456
+229 = 536870912
+230 = 1073741824
+231 = 2147483648
+232 = 4294967296
+*/
+
+
+
+
+
+
+	var $_sqlCmp='';
+	var $_lastQuery;
+	var $_attrFlags;
+	var $_conn;
+
+	function __construct( $connection = NULL )
+	{
+		//parent::__construct();
+		if( empty( $connection ) )
+		{
+			$this->_conn	= self::$connection;
+		}
+		else
+			$this->_conn = $connection;
+	}
+	public static function getBaseClassName()
+	{
+			$class = explode('\\', get_called_class());
+			return array_pop($class);
+	}
+	public function setAttrFlags( $array=array() )
+	{
+		if( is_array( $array ) )
+			$this->_attrFlags = $array;
+	}
+	/*
+	 * $dictionaryIndex the index dictionary example dictionary by id
+	 * if false return a simple array
+	 */
+	public static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL )
+	{
+		$conn 	= $connection ? $connection : self::$connection;
+		$resSql = $conn->query( $sql );
+
+		if( !$resSql )
+		{
+			throw new SystemException( 'An error occours please try gain later', $sql );
+		}
+
+		$result = array();
+
+		while( $row = $resSql->fetch_assoc() )
+		{
+			$_obj = new static();
+			$_obj->assignFromArray( $row );
+
+			if( $dictionaryIndex && !empty( $_obj->{ $dictionaryIndex } ) )
+			{
+				$result[ $_obj->{$dictionaryIndex} ] = $_obj;
+			}
+			else
+			{
+				$result[] = $_obj;
+			}
+		}
+
+		return $result;
+	}
+
+	public static function createFromQuery($query, $connection = NULL)
+	{
+
+		$conn = $connection ? $connection : self::$connection;
+
+		$result = $conn->query( $query );
+
+		if( $result && $row = $result->fetch_assoc( ))
+		{
+			$_obj = new static( $connection );
+			$_obj->assignFromArray( $row );
+			$_obj->setWhereString( isset( $_obj->id ) );
+			return $_obj;
+		}
+		return FALSE;
+	}
+
+	public static function createFromUniqArray($array,$asTableName=null)
+	{
+
+		$_obj = new static();
+		$_obj->assignFromUniqueSelect( $array, $asTableName );
+
+		return $_obj;
+	}
+
+	function assignFromUniqueSelect( $array, $asTableName=null )
+	{
+		$_clas_name	= $asTableName == null ?self::getBaseClassName() : $asTableName;
+		$c			= 0;
+		$obj		 = $this;
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array($name , $array_names ) )
+				continue;
+
+			if(isset($array[$_clas_name.'__'.$c]))
+			{
+					$this->{$name} =	$array[ $_clas_name.'__'.$c ];
+			}
+			$c++;
+		}
+		$obj->setWhereString();
+	}
+
+	public static function getUniqSelect($asTableName=null)
+	{
+		$fields		 = array();
+		$c				= 0;
+		$_clas_name	 = $asTableName == null ? self::getBaseClassName() : $asTableName;
+		$obj			= new static();
+
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array( $name , $array_names ) )
+				continue;
+
+			$fields[] ='`'.$_clas_name.'`.`'.$name.'` AS '.$_clas_name.'__'.($c++);
+		}
+		return join(',',$fields);
+	}
+
+	function getLastQuery()
+	{
+		return $this->_lastQuery;
+	}
+
+	function setWhereString($only_id = true )
+	{
+		$cmp_a		= array();
+		$name_class = get_class( $this );
+
+		if( $only_id && property_exists($name_class,'id') && !empty( $this->id ))
+		{
+			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
+			return;
+		}
+
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($this as $name => $value)
+		{
+			if( in_array( $name , $array_names ) )
+				continue;
+
+			if( property_exists($name_class,$name) && isset($this->{$name}) )
+			{
+				if( $this->{$name} === NULL )
+					$cmp_a[] = '`'.$name.'` IS NULL';
+				else
+					$cmp_a[] = '`'.$name.'` = "'.$this->_conn->real_escape_string( $value ).'"';
+			}
+		}
+		$this->_sqlCmp = implode(' AND ',$cmp_a );
+	}
+
+	function setWhereStringNonEmptyValues()
+	{
+		$cmp_a			= array();
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		$name_class= get_class($this);
+
+		foreach ($this as $name => $value)
+		{
+			if( in_array( $name, $array_names ) )
+				continue;
+
+			if( property_exists($name_class,$name) && isset($this->{$name}) )
+			{
+				if( !empty( $value )	)
+				{
+					$cmp_a[] = '`'.$name.'` = "'.$this->_conn->real_escape_string( $value ).'"';
+				}
+			}
+		}
+		$this->_sqlCmp = implode(' AND ',$cmp_a );
+	}
+
+	/*
+	*	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
+	*		example
+				//only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
+				$booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
+				//Assign all the values from $_POST
+				$booking->assignFromArray( $_POST );
+	*/
+
+	function assignFromArray()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+		$array			= func_get_arg( 0 );
+
+		if( empty($num_args) || !is_array( $array ) )
+			return FALSE;
+
+		for($i=1;$i<$num_args;$i++)
+		{
+			$indexes[] = func_get_arg( $i );
+		}
+
+		$class_name	 = get_class($this);
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+		$i				= 0;
+		foreach( $this as $name => $value)
+		{
+
+			if(
+				empty( $array[ $name ] )
+				|| in_array( $name, $array_names )
+				|| !property_exists( $class_name, $name )
+				)
+
+			{
+				continue;
+			}
+
+			if( !empty( $indexes ) && ! in_array($name,$indexes,TRUE) )
+				continue;
+
+			$this->{$name} = $array[ $name ];
+			$i++;
+		}
+		return $i;
+	}
+
+	public static function createFromArray($array, $connection=NULL)
+	{
+		$_obj = new static($connection);
+		$_obj->assignFromArray( $array );
+		$_obj->setWhereString();
+		return $_obj;
+	}
+
+
+	function insertDb()
+	{
+		$this->_lastQuery	= $this->getInsertSql();
+		$result			= $this->_conn->query( $this->_lastQuery );
+		$class_name		= get_class( $this );
+
+		if($result && property_exists($class_name,'id'))
+		{
+			$this->id = $this->_conn->insert_id;
+		}
+		$this->setWhereString();
+		return $result;
+	}
+
+	function getInsertSql()
+	{
+		$array_fields	= array();
+		$array_values	= array();
+		$class_name	 = get_class($this);
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($this as $name => $value)
+		{
+			if( property_exists($class_name,$name))
+			{
+				if( in_array( $name, $array_names ) )
+				{
+					continue;
+				}
+
+
+				$attr_flags		 = 0;
+				$validation_value	= array();
+
+				if( !empty( $this->_attrFlags[ $name ]) )
+				{
+					if( is_array( $this->_attrFlags[ $name ] ) )
+					{
+						if( !empty( $this->_attrFlags[$name]['flags'] ))
+							$attr_flags		 = $this->_attrFlags[$name]['flags']?:0;
+
+						if( !empty(	$this->_attrFlags[$name]['values'] ) )
+							$validation_value	= $this->_attrFlags[$name];
+					}
+					else
+					{
+						$attr_flags = $this->_attrFlags[ $name ];
+					}
+				}
+
+				/* HAS PRECENDENCE OVER IGNORE_ON_INSERT */
+				if( ( $attr_flags & DBTable::TIMESTAMP_ON_CREATE ) != 0 )
+				{
+					$this->{$name}	= date('Y-m-d H:i:s');
+					$array_values[] = '"'.$this->{$name}.'"';
+					$array_fields[] = '`'.$name.'`';
+					continue;
+				}
+
+				if( empty( $this->{$name} ) )
+				{
+					Utils::addLog
+					(
+						Utils::LOG_LEVEL_PARANOID
+						,'DBTable'
+						,'IGNORE Because is empty '.self::getBaseClassName().'->'.$name
+					);
+					continue;
+				}
+
+				if( ( $attr_flags & DBTable::IGNORE_ON_INSERT )	!= 0 )
+				{
+					Utils::addLog
+					(
+						Utils::LOG_LEVEL_PARANOID
+						,'DBTable'
+						,'IGNORE Because is IGNORE ON INSERT '.self::getBaseClassName().'->'.$name
+					);
+					continue;
+				}
+
+				$array_fields[] = '`'.$name.'`';
+
+				if( $value === 'NULL' )
+				{
+					$array_values[] = ' NULL ';
+				}
+				else if( $value === 'CURRENT_TIMESTAMP')
+				{
+					$this->{$name}	= date('Y-m-d H:i:s');
+					$array_values[] = '"'.$this->{$name}.'"';
+				}
+				else
+				{
+					$new_value = $value;
+					if( ($attr_flags & DBTable::TRIM_ON_SAVE)	!= 0 )
+					{
+						$new_value = trim( $value );
+						$this->{$name} = $new_value;
+					}
+
+					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value )
+						. '"';
+				}
+			}
+		}
+
+		$sql_insert_fields = implode( ',',$array_fields);
+		$sql_insert_values = implode( ',',$array_values);
+		$sql_insert_string = 'INSERT INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
+								VALUES ( '.$sql_insert_values.' )';
+
+		return $sql_insert_string;
+	}
+
+	function deleteDb()
+	{
+		$this->setWhereStringNonEmptyValues();
+		$sql = 'DELETE FROM `'.self::getBaseClassName().'` WHERE '.$this->_sqlCmp.' LIMIT 1';
+		$this->_lastQuery = $sql;
+		return $this->_conn->query( $sql );
+
+	}
+	function deleteFromDb()
+	{
+		deleteDb();
+	}
+
+	function updateDb()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+
+		if( $num_args )
+		{
+			$arg_list	= func_get_args();
+			$indexes	= $arg_list;
+
+			if( is_array( $arg_list[ 0 ] ) )
+			{
+				$indexes	= $arg_list[ 0 ];
+			}
+		}
+
+		$this->_lastQuery	= $this->getUpdateSql( $indexes );
+		return $this->_conn->query( $this->_lastQuery );
+	}
+
+	function getUpdateSql( $fieldsToUpdate = array() )
+	{
+		$_tmp			= $this;
+		$update_array	= array();
+		$name_class		= get_class( $this );
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($_tmp as $name => $value)
+		{
+			if( in_array( $name, $array_names ) || empty( $value) )
+				continue;
+
+			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
+				continue;
+
+			if( property_exists( $name_class, $name ) )
+			{
+				$attr_flags			= 0;
+				$validation_value	= array();
+
+				if( !empty( $this->_attrFlags[ $name ]) )
+				{
+					if( is_array( $this->_attrFlags[ $name ] ) )
+					{
+						$attr_flags			= $this->_attrFlags[$name]['flags']	?: 0;
+						$validation_value	= $this->_attrFlags[$name]			?: array();
+					}
+					else
+					{
+						$attr_flags			= $this->_attrFlags[ $name ];
+					}
+				}
+
+
+				if( ($attr_flags & DBTable::IGNORE_ON_UPDATE) != 0 )
+					continue;
+
+				if( $this->{$name} === 'NULL' )
+				{
+					$update_array[]		= '`'.$name.'`=NULL';
+				}
+				else if( $value === 'CURRENT_TIMESTAMP')
+				{
+					$this->{$name}		= date('Y-m-d H:i:s');
+					$update_array[]		= '`'.$name.'`="'.$this->{$name}.'"';
+				}
+				else
+				{
+					if( ($attr_flags & DBTable::TRIM_ON_SAVE)	!= 0 )
+						$update_array[]	= '`'.$name.'`="'.$this->_conn->real_escape_string(trim($value)).'"';
+					else
+						$update_array[]	= '`'.$name.'`="'.$this->_conn->real_escape_string($value).'"';
+				}
+			}
+		}
+
+		$updatefields		= implode( ',' ,$update_array );
+		return 'UPDATE `'.self::getBaseClassName().'` SET '.$updatefields.' WHERE '.$this->_sqlCmp.' LIMIT 1';
+	}
+
+	function toArrayExclude()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+
+		if( $num_args )
+		{
+			$arg_list	= func_get_args();
+			$indexes	= $arg_list;
+
+			if( is_array( $arg_list[ 0 ] ) )
+			{
+				$indexes	= $arg_list[0];
+			}
+		}
+
+		$_array = array();
+		$obj	= $this;
+
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array( $name,$array_names ) )
+				continue;
+
+			if(in_array( $name, $indexes ))
+				continue;
+
+			$flags = 0;
+
+			if( !empty( $this->_attrFlags ) && isset( $this->_attrFlags[ $name ] ) )
+			{
+				$flags = $this->_attrFlags[ $name ];
+
+				if( is_array( $this->_attrFlags[ $name ] ) )
+					$flags	= $this->_attrFlags[$name]['flags']?:0;
+
+				if( $flags & self::IS_SENSITIVE_DATA )
+					continue;
+			}
+
+			if( $flags & self::INT_VALUE )
+				$_array[ $name ] = intVal( $value );
+			else if( $flags & self::FLOAT_VALUE )
+				$_array[ $name ] = floatVal( $value );
+			else
+				$_array[ $name ] = $value;
+		}
+		return $_array;
+	}
+
+	function toArray()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+
+		if( $num_args )
+		{
+			$arg_list	= func_get_args();
+			$indexes	= $arg_list;
+
+			if( is_array( $arg_list[ 0 ] ) )
+			{
+				$indexes	= $arg_list[ 0 ];
+			}
+		}
+
+		$_array = array();
+		$obj	= $this;
+
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array( $name ,$array_names ) )
+				continue;
+
+			if( !empty( $indexes ) && !in_array( $name, $indexes ))
+				continue;
+
+			$flags = 0;
+
+			if( !empty( $this->_attrFlags ) && isset( $this->_attrFlags[ $name ] ) )
+			{
+				$flags = $this->_attrFlags[ $name ];
+
+				if( is_array( $this->_attrFlags[ $name ] ) )
+					$flags	= $this->_attrFlags[$name]['flags']?:0;
+			}
+
+			if( $flags & self::INT_VALUE )
+				$_array[ $name ] = intVal( $value );
+			else if( $flags & self::FLOAT_VALUE )
+				$_array[ $name ] = floatVal( $value );
+			else
+				$_array[ $name ] = $value;
+		}
+		return $_array;
+	}
+
+	function load( $only_id = true, $for_update = false )
+	{
+		$this->setWhereString($only_id);
+
+		if( $this->_sqlCmp != '' )
+		{
+			$_sql	= 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$this->_sqlCmp.' LIMIT 1';
+
+			if( $for_update )
+				$_sql .= ' FOR UPDATE ';
+
+			$this->_lastQuery = $_sql;
+			$result = $this->_conn->query( $_sql );
+
+			if( $result && $row = $result->fetch_assoc( ) )
+			{
+				$this->assignFromArray( $row );
+
+				if( $only_id )
+					$this->setWhereString();
+
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
+	function validateInsert()
+	{
+		$this->validate( DBTable::REQUIRED_ON_INSERT, DBTable::IGNORE_ON_INSERT);
+	}
+
+	function validateUpdate()
+	{
+		$this->validate( DBTable::REQUIRED_ON_UPDATE, DBTable::IGNORE_ON_UPDATE);
+	}
+
+	function validate( $required_on_save, $ignore_on_save )
+	{
+		$class_name = get_class( $this );
+		$structure	= $this->_attrFlags;
+
+		if( empty( $this->_attrFlags ) )
+			return;
+
+		foreach( $this->_attrFlags as $key => $params )
+		{
+			if( !property_exists($class_name, $key ) )
+			{
+				throw new SystemException
+				(
+					'Ocurrio un error interno'
+					,'No existe la propiedad'.$key.' En la tabla '.$class_name.' Arreglar inmediatamente Reportarlo '
+				);
+			}
+
+
+			$attr_flags			= 0;
+			$validation_value	= array();
+			$params				= array();
+
+			if( is_array( $this->_attrFlags[ $key ] ) )
+			{
+				if( !empty(	$this->_attrFlags[$key]['flags'] ))
+					$attr_flags = $this->_attrFlags[$key]['flags'];
+
+				if( !empty( $this->_attrFlags[$key] ) )
+					$params	= $this->_attrFlags[$key];
+			}
+			else
+			{
+				$attr_flags = $this->_attrFlags[ $key ]?:0;
+			}
+
+			if( empty( $attr_flags ) || ($attr_flags & $ignore_on_save) )
+				continue;
+
+
+			if( empty( $this->{$key} ) || $this->{$key} === 'EMPTY' || $this->{$key} === 'NULL' )
+			{
+				if( ($attr_flags & $required_on_save) )
+					throw new ValidationException
+					(
+						$key.' cant be empty'
+						,'Automatic field validation'
+					);
+			}
+			else
+			{
+				$this->validateField( $key, $attr_flags, $params );
+			}
+		}
+	}
+
+	function validateField( $key, $flags, $params )
+	{
+		if( DBTable::INT_VALUE & $flags != 0 )
+		{
+			if( ! ctype_digit( (string)$this->{$key} ) )
+			{
+				throw new ValidationException($key.' is not a valid number');
+			}
+
+			if( !empty( $params['min'] ) )
+			{
+				if( intval( $this->{$key} ) < intval( $params['min'] ) )
+				{
+					throw new ValidationException('the minimun value for '.$key.' is '.$params['min'] );
+				}
+			}
+			if( !empty( $params['max'] ) )
+			{
+				if( intval( $this->{$key} ) > intval( $params['max'] ) )
+				{
+					throw new ValidationException('the maximun value for '.$key.' is '.$params['min'] );
+				}
+			}
+		}
+		elseif( ( DBTable::STRING_VALUE & $flags ) != 0 )
+		{
+			if( !empty( $params['min'] ) )
+			{
+				if( mb_strlen( $this->{$key} ) < intval( $params['min'] ) )
+				{
+					throw new ValidationException('the minimun value for '.$key.' is '.$params['min'] );
+				}
+			}
+			if( !empty( $params['max'] ) )
+			{
+				if( mb_strlen( $this->{$key} ) > intval( $params['max'] ) )
+				{
+					throw new ValidationException('the maximun value for '.$key.' is '.$params['min'] );
+				}
+			}
+		}
+		elseif( ( DBTable::FLOAT_VALUE & $flags ) != 0 )
+		{
+			if( !is_numeric( $this->{$key} ) )
+			{
+				throw new ValidationException($key.' is not a valid float number');
+			}
+		}
+		elseif( ( DBTable::PHONE_VALUE & $flags ) != 0 )
+		{
+			$tmp = array();
+
+			if( preg_match_all( '/[0-9]/', $this->{$key}, $tmp ) < 10 )
+			{
+				throw new ValidationException($key.' is not a valid phone number');
+			}
+		}
+		elseif( ( DBTable::EMAIL_VALUE & $flags ) != 0 )
+		{
+			if (!filter_var($this->{$key}, FILTER_VALIDATE_EMAIL) === false)
+			{
+				throw new ValidationException($key.' is not a valid email');
+			}
+		}
+		elseif( ( DBTable::DOMAIN_VALUE & $flags ) != 0 )
+		{
+			if( !preg_match('/^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+((a[cdefgilmnoqrstuwxz]|aero|arpa)|(b[abdefghijmnorstvwyz]|biz)|(c[acdfghiklmnorsuvxyz]|cat|com|coop)|d[ejkmoz]|(e[ceghrstu]|edu)|f[ijkmor]|(g[abdefghilmnpqrstuwy]|gov)|h[kmnrtu]|(i[delmnoqrst]|info|int)|(j[emop]|jobs)|k[eghimnprwyz]|l[abcikrstuvy]|(m[acdghklmnopqrstuvwxyz]|mil|mobi|museum)|(n[acefgilopruz]|name|net)|(om|org)|(p[aefghklmnrstwy]|pro)|qa|r[eouw]|s[abcdeghijklmnortvyz]|(t[cdfghjklmnoprtvwz]|travel)|u[agkmsyz]|v[aceginu]|w[fs]|y[etu]|z[amw])$/i',$domain))
+			{
+				throw new ValidationException
+				(
+				);
+			}
+		}
+		elseif( ( DBTable::TIMESTAMP_VALUE & $flags ) != 0 )
+		{
+			if( $this->{$key} == 'CURRENT_TIMESTAMP' )
+				return;
+
+			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key}) || !strtotime( $this->{$key}) )
+			{
+				throw new ValidationException($key.' is not a valid date time');
+			}
+		}
+		elseif( ( DBTable::TIME_VALUE ) & $flags != 0 )
+		{
+
+			if( !preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $this->{key}) )
+			{
+				throw new ValidationException($key.' is not a valid time value');
+			}
+		}
+		elseif( ( DBTable::ENUM_VALUE & $flags ) != 0 )
+		{
+			if(! in_array( $this->{$key}, $params['values'] ) )
+			{
+				throw new ValidationException($key.' is not valid', 'Value is'.$this->{$key}.print_r( $params['values'],true));
+			}
+		}
+	}
+}
+
