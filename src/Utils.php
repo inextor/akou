@@ -120,11 +120,11 @@ class  Utils
 			\ChromePhp::log( $keyword, $message );
 		}
 
-		if( $log_level <= self::$DB_MAX_LOG_LEVEL && $log_level != self::LOG_LEVEL_PARANOID && SELF::$LOG_CLASS )
+		if( $log_level <= self::$DB_MAX_LOG_LEVEL && $log_level != self::LOG_LEVEL_PARANOID && self::$LOG_CLASS )
 		{
 			$log			= new self::$LOG_CLASS;
-			$log->{ SELF::$LOG_CLASS_KEY_ATTR }		= $keyword;
-			$log->{ SELF::$LOG_CLASS_DATA_ATTR }	= $message;
+			$log->{ self::$LOG_CLASS_KEY_ATTR }		= $keyword;
+			$log->{ self::$LOG_CLASS_DATA_ATTR }	= $message;
 			$log->insertDb();
 		}
 
