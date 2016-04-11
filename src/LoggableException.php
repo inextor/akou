@@ -70,9 +70,7 @@ class LoggableException extends \Exception
 	**/
 	public static function addMysqlError()
 	{
-		global $mysqli;
-
-		if( $mysqli->error )
+		if( DBTable::$connection->error )
 		{
 			$datos	  = '';
 			$arreglo	= debug_backtrace(  );
@@ -116,7 +114,7 @@ class LoggableException extends \Exception
 			(
 				Utils::LOG_LEVEL_ERROR
 				,'MYSQL_ERROR'
-				,'Error No.:'.$mysqli->errno.' '. $datos . ': ' . $mysqli->error
+				,'Error No.:'.DBTable::$connection->errno.' '. $datos . ': ' . DBTable::$connection->error
 			);
 		}
 	}

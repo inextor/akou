@@ -216,7 +216,7 @@ class  Utils
 		}
 		return $string;
 	}
-	static function curl_post( $url, $params = array(),$headers=array(),&$responseHeaders = NULL, &$status = NULL, $responseCookies=array(),&$responseCookies=NULL )
+	static function curl_post( $url, $params = array(),$headers=array(),&$responseHeaders = NULL, &$status = NULL, &$responseCookies=NULL )
 	{
 		$http_params	= array();
 

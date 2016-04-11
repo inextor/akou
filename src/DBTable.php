@@ -8,16 +8,18 @@ class DBTable
 {
 
 	public static $connection	= NULL;
+	public static $_attrFlags	= array();
+
 	const TRIM_ON_SAVE			= 1;
 	const INT_VALUE				= 2;	// ✓
 	const STRING_VALUE			= 5;	// ✓
-	const EMAIL_VALUE			= 9; //8 + 1 TRIM_ON_SAVE ✓
-	const DOMAIN_VALUE			= 17; //16 + 1 TRIM_ON_SAVE ✓
-	const URL_VALUE				= 33; //32 + 1 TRIM_ON_SAVE ✗	//Not implemented YET
-	const TIMESTAMP_VALUE		= 64; // ✓
-	const PHONE_VALUE			= 129; //128 + 1 TRIM_ON_SAVE ✓
-	const ENUM_VALUE			= 256; // ✓
-	const FLOAT_VALUE			= 512; // ✓
+	const EMAIL_VALUE			= 9; 	//8 + 1 TRIM_ON_SAVE ✓
+	const DOMAIN_VALUE			= 17; 	//16 + 1 TRIM_ON_SAVE ✓
+	const URL_VALUE				= 33; 	//32 + 1 TRIM_ON_SAVE ✗	//Not implemented YET
+	const TIMESTAMP_VALUE		= 64; 	// ✓
+	const PHONE_VALUE			= 129; 	//128 + 1 TRIM_ON_SAVE ✓
+	const ENUM_VALUE			= 256; 	// ✓
+	const FLOAT_VALUE			= 512; 	// ✓
 	const IGNORE_ON_INSERT		= 1024; //
 	const IGNORE_ON_UPDATE		= 2048;
 	const REQUIRED_ON_INSERT	= 4096;
@@ -28,6 +30,7 @@ class DBTable
 	const TIMESTAMP_ON_CREATE	= 65536; //✓
 	const DONT_EXPORT_EXTERNAL	= 131072;
 	const TIME_VALUE			= 262144;
+	const INSERT_EMPTY_DEFAULT	= 524288; //For blob,text,json,etc without default value
 
 	 //Dont add to array when is calle $obj->toArrayExclude()
 	//const NO_NULL				=	131072; //Cant be set 'NULL'	//not implemented yet
@@ -84,7 +87,6 @@ class DBTable
 
 	var $_sqlCmp='';
 	var $_lastQuery;
-	var $_attrFlags;
 	var $_conn;
 
 	function __construct( $connection = NULL )
@@ -102,10 +104,11 @@ class DBTable
 			$class = explode('\\', get_called_class());
 			return array_pop($class);
 	}
-	public function setAttrFlags( $array=array() )
+
+	public static function setAttrFlags( $array=array() )
 	{
 		if( is_array( $array ) )
-			$this->_attrFlags = $array;
+			self::$_attrFlags = $array;
 	}
 	/*
 	 * $dictionaryIndex the index dictionary example dictionary by id
@@ -339,8 +342,9 @@ class DBTable
 	{
 		$array_fields	= array();
 		$array_values	= array();
-		$class_name	 = get_class($this);
+		$class_name	 	= get_class($this);
 		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($this as $name => $value)
 		{
@@ -351,23 +355,22 @@ class DBTable
 					continue;
 				}
 
-
-				$attr_flags		 = 0;
+				$attr_flags		 	= 0;
 				$validation_value	= array();
 
-				if( !empty( $this->_attrFlags[ $name ]) )
+				if( !empty( $arrayFlags[ $name ] ) )
 				{
-					if( is_array( $this->_attrFlags[ $name ] ) )
+					if( is_array( $arrayFlags[ $name ] ) )
 					{
-						if( !empty( $this->_attrFlags[$name]['flags'] ))
-							$attr_flags		 = $this->_attrFlags[$name]['flags']?:0;
+						if( !empty( $arrayFlags[$name]['flags'] ))
+							$attr_flags		 = $arrayFlags[$name]['flags']?:0;
 
-						if( !empty(	$this->_attrFlags[$name]['values'] ) )
-							$validation_value	= $this->_attrFlags[$name];
+						if( !empty(	$arrayFlags[$name]['values'] ) )
+							$validation_value	= $arrayFlags[$name];
 					}
 					else
 					{
-						$attr_flags = $this->_attrFlags[ $name ];
+						$attr_flags = $arrayFlags[ $name ];
 					}
 				}
 
@@ -377,17 +380,6 @@ class DBTable
 					$this->{$name}	= date('Y-m-d H:i:s');
 					$array_values[] = '"'.$this->{$name}.'"';
 					$array_fields[] = '`'.$name.'`';
-					continue;
-				}
-
-				if( empty( $this->{$name} ) )
-				{
-					Utils::addLog
-					(
-						Utils::LOG_LEVEL_PARANOID
-						,'DBTable'
-						,'IGNORE Because is empty '.self::getBaseClassName().'->'.$name
-					);
 					continue;
 				}
 
@@ -402,6 +394,26 @@ class DBTable
 					continue;
 				}
 
+				if( empty( $this->{$name} ) )
+				{
+					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
+					{
+						$this->{$name}	= '';
+						$array_values[] = '""';
+						$array_fields[] = '`'.$name.'`';
+					}
+					else
+					{
+						Utils::addLog
+						(
+							Utils::LOG_LEVEL_PARANOID
+							,'DBTable'
+							,'IGNORE Because is empty '.self::getBaseClassName().'->'.$name
+						);
+					}
+					continue;
+				}
+
 				$array_fields[] = '`'.$name.'`';
 
 				if( $value === 'NULL' )
@@ -412,6 +424,10 @@ class DBTable
 				{
 					$this->{$name}	= date('Y-m-d H:i:s');
 					$array_values[] = '"'.$this->{$name}.'"';
+				}
+				else if( $value	=== 'EMPTY' )
+				{
+					$array_values[] = '""';
 				}
 				else
 				{
@@ -475,6 +491,7 @@ class DBTable
 		$update_array	= array();
 		$name_class		= get_class( $this );
 		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($_tmp as $name => $value)
 		{
@@ -489,16 +506,16 @@ class DBTable
 				$attr_flags			= 0;
 				$validation_value	= array();
 
-				if( !empty( $this->_attrFlags[ $name ]) )
+				if( !empty( $arrayFlags[ $name ]) )
 				{
-					if( is_array( $this->_attrFlags[ $name ] ) )
+					if( is_array( $arrayFlags[ $name ] ) )
 					{
-						$attr_flags			= $this->_attrFlags[$name]['flags']	?: 0;
-						$validation_value	= $this->_attrFlags[$name]			?: array();
+						$attr_flags			= $arrayFlags[$name]['flags']	?: 0;
+						$validation_value	= $arrayFlags[$name]			?: array();
 					}
 					else
 					{
-						$attr_flags			= $this->_attrFlags[ $name ];
+						$attr_flags			= $arrayFlags[ $name ];
 					}
 				}
 
@@ -509,6 +526,10 @@ class DBTable
 				if( $this->{$name} === 'NULL' )
 				{
 					$update_array[]		= '`'.$name.'`=NULL';
+				}
+				else if( $this->{$name} === 'EMPTY' )
+				{
+					$update_array[]		= '`'.$name.'`= ""';
 				}
 				else if( $value === 'CURRENT_TIMESTAMP')
 				{
@@ -549,6 +570,7 @@ class DBTable
 		$obj	= $this;
 
 		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($obj as $name => $value)
 		{
@@ -560,12 +582,12 @@ class DBTable
 
 			$flags = 0;
 
-			if( !empty( $this->_attrFlags ) && isset( $this->_attrFlags[ $name ] ) )
+			if( !empty( $arrayFlags ) && isset( $arrayFlags[ $name ] ) )
 			{
-				$flags = $this->_attrFlags[ $name ];
+				$flags = $arrayFlags[ $name ];
 
-				if( is_array( $this->_attrFlags[ $name ] ) )
-					$flags	= $this->_attrFlags[$name]['flags']?:0;
+				if( is_array( $arrayFlags[ $name ] ) )
+					$flags	= $arrayFlags[$name]['flags']?:0;
 
 				if( $flags & self::IS_SENSITIVE_DATA )
 					continue;
@@ -600,6 +622,7 @@ class DBTable
 		$_array = array();
 		$obj	= $this;
 
+		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		foreach ($obj as $name => $value)
@@ -612,12 +635,12 @@ class DBTable
 
 			$flags = 0;
 
-			if( !empty( $this->_attrFlags ) && isset( $this->_attrFlags[ $name ] ) )
+			if( !empty( $arrayFlags ) && isset( $arrayFlags[ $name ] ) )
 			{
-				$flags = $this->_attrFlags[ $name ];
+				$flags = $arrayFlags[ $name ];
 
-				if( is_array( $this->_attrFlags[ $name ] ) )
-					$flags	= $this->_attrFlags[$name]['flags']?:0;
+				if( is_array( $arrayFlags[ $name ] ) )
+					$flags	= $arrayFlags[$name]['flags']?:0;
 			}
 
 			if( $flags & self::INT_VALUE )
@@ -670,12 +693,12 @@ class DBTable
 	function validate( $required_on_save, $ignore_on_save )
 	{
 		$class_name = get_class( $this );
-		$structure	= $this->_attrFlags;
+		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		if( empty( $this->_attrFlags ) )
+		if( empty( $arrayFlags ) )
 			return;
 
-		foreach( $this->_attrFlags as $key => $params )
+		foreach( $arrayFlags as $key => $params )
 		{
 			if( !property_exists($class_name, $key ) )
 			{
@@ -691,17 +714,17 @@ class DBTable
 			$validation_value	= array();
 			$params				= array();
 
-			if( is_array( $this->_attrFlags[ $key ] ) )
+			if( is_array( $arrayFlags[ $key ] ) )
 			{
-				if( !empty(	$this->_attrFlags[$key]['flags'] ))
-					$attr_flags = $this->_attrFlags[$key]['flags'];
+				if( !empty(	$arrayFlags[$key]['flags'] ))
+					$attr_flags = $arrayFlags[$key]['flags'];
 
-				if( !empty( $this->_attrFlags[$key] ) )
-					$params	= $this->_attrFlags[$key];
+				if( !empty( $arrayFlags[$key] ) )
+					$params	= $arrayFlags[$key];
 			}
 			else
 			{
-				$attr_flags = $this->_attrFlags[ $key ]?:0;
+				$attr_flags = $arrayFlags[ $key ]?:0;
 			}
 
 			if( empty( $attr_flags ) || ($attr_flags & $ignore_on_save) )
@@ -824,4 +847,3 @@ class DBTable
 		}
 	}
 }
-
