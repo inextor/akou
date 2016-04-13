@@ -241,52 +241,52 @@ class  Utils
 			,$url.PHP_EOL.print_r( $params, true )
 		);
 
-		$ch			= curl_init();
+		$ch			= \curl_init();
 
-		curl_setopt( $ch, CURLOPT_URL,$url);
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1);
+		\curl_setopt( $ch, CURLOPT_URL,$url);
+		\curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1);
 
 		if( !empty( $params ) )
 		{
 			$headers[]	= 'Content-Type: multipart/form-data';
-			curl_setopt( $ch, CURLOPT_POST, TRUE );
+			\curl_setopt( $ch, CURLOPT_POST, TRUE );
 
 			if( !is_array( $params ) )
 			{
-				$length		= strlen( $params );
+				$length		= \strlen( $params );
 				$headers[]	= 'Content-length: '.$length;
 			}
-			curl_setopt( $ch, CURLOPT_POSTFIELDS, $params);
+			\curl_setopt( $ch, CURLOPT_POSTFIELDS, $params);
 		}
 
-		curl_setopt( $ch, CURLOPT_HTTPHEADER,$headers);
-		curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT ,120);
-		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, TRUE );
-		curl_setopt( $ch, CURLOPT_HEADER, 1 );
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+		\curl_setopt( $ch, CURLOPT_HTTPHEADER,$headers);
+		\curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT ,120);
+		\curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, TRUE );
+		\curl_setopt( $ch, CURLOPT_HEADER, 1 );
+		\curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
 
-		$result 		= curl_exec($ch);
-		$header_size	= curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		$result 		= \curl_exec($ch);
+		$header_size	= \curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
-		$header			= substr($result, 0, $header_size);
-		$body			= substr($result, $header_size);
-		$status			= curl_getinfo( $ch , CURLINFO_HTTP_CODE );
-		$headerArray	= split("\n", $header );
+		$header			= \substr($result, 0, $header_size);
+		$body			= \substr($result, $header_size);
+		$status			= \curl_getinfo( $ch , CURLINFO_HTTP_CODE );
+		$headerArray	= explode("\n", $header );
 
-		for( $i=1;$i<count($headerArray); $i++ )
+		for( $i=1;$i<\count($headerArray); $i++ )
 		{
-			$h		= trim( $headerArray[ $i ] );
+			$h		= \trim( $headerArray[ $i ] );
 			if( !$h )
 				continue;
 
-			$fields = split( ': ', $h );
+			$fields = explode( ': ', $h );
 			if( isset( $fields[ 1 ] ) )
 			{
-				$responseHeaders[ trim($fields[0]) ] = trim($fields[1]);
+				$responseHeaders[ \trim($fields[0]) ] = \trim($fields[1]);
 			}
 		}
 
-		curl_close( $ch );
+		\curl_close( $ch );
 
 		//Utils::addLog
 		//(

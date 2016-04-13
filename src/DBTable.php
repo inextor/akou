@@ -99,6 +99,12 @@ class DBTable
 		else
 			$this->_conn = $connection;
 	}
+
+	public static function query( $sql_query )
+	{
+		return self::$connection->query( $sql_query );
+	}
+
 	public static function getBaseClassName()
 	{
 			$class = explode('\\', get_called_class());
@@ -335,6 +341,22 @@ class DBTable
 			$this->id = $this->_conn->insert_id;
 		}
 		$this->setWhereString();
+
+		//if( $this->_conn->error )
+		//{
+		//	if( strpos( $this->_conn->error,'Data too long for column') === 0 )
+		//	{
+		//		error_log( $this->_conn->error );
+		//		$lastIndex = strrpos( $this->_conn->error,'\'');
+		//		$varName = substr( $this->_conn->error,26,$lastIndex-26);
+		//		error_log('Error with '.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
+		//	}
+		//	else
+		//	{
+		//		error_log( $this->_conn->error );
+		//	}
+		//}
+
 		return $result;
 	}
 
@@ -845,5 +867,31 @@ class DBTable
 				throw new ValidationException($key.' is not valid', 'Value is'.$this->{$key}.print_r( $params['values'],true));
 			}
 		}
+	}
+
+	public static function importDbSchema( $namespace = '')
+	{
+
+		$res	= self::$connection->query( 'SHOW TABLES' );
+		$tables = array();
+
+		$phpCode = $namespace ? "namespace $namespace;\n": '';
+
+		while( $row = $res->fetch_row()  )
+		{
+			$tableName	= $row[ 0 ];
+			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable{';
+
+			$fieldsRes= $mysqli->query( 'describe `'.$mysqli->real_escape_string( $table_name ).'`');
+			$fields	 = array();
+
+			while( $fieldRow = $fieldsRes->fetch_object() )
+			{
+				$phpCode .= ' var $'.$fieldRow->Field.';';
+			}
+
+			$phpCode .= '}'.PHP_EOL;
+		}
+		eval( $phpCode ); //The evil one
 	}
 }
