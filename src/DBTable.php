@@ -342,20 +342,21 @@ class DBTable
 		}
 		$this->setWhereString();
 
-		//if( $this->_conn->error )
-		//{
-		//	if( strpos( $this->_conn->error,'Data too long for column') === 0 )
-		//	{
-		//		error_log( $this->_conn->error );
-		//		$lastIndex = strrpos( $this->_conn->error,'\'');
-		//		$varName = substr( $this->_conn->error,26,$lastIndex-26);
-		//		error_log('Error with '.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
-		//	}
-		//	else
-		//	{
-		//		error_log( $this->_conn->error );
-		//	}
-		//}
+		if( $this->_conn->error )
+		{
+			if( strpos( $this->_conn->error,'column') !== FALSE )
+			{
+				error_log( $this->_conn->error );
+				$firstIndex	= strpos( $this->_conn->error,'\'')+1;
+				$lastIndex 	= strrpos( $this->_conn->error,'\'');
+				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
+				error_log('Error with '.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
+			}
+			else
+			{
+				error_log( $this->_conn->error );
+			}
+		}
 
 		return $result;
 	}

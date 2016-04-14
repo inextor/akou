@@ -321,7 +321,7 @@ class  Utils
 		}
 		return $result;
 	}
-	static function convertTimestampToTimeZone( $dateTimestamp, $fromTimezone ='UTC', $toTimezone = 'America/Los_Angeles' )
+	static function convertTimestampToTimeZone( $dateTimestamp, $fromTimezone ='UTC', $toTimezone = 'America/Los_Angeles' ,$format = 'Y-m-d H:i:s' )
 	{
 		if( $dateTimestamp == NULL )
 			return NULL;
@@ -329,12 +329,13 @@ class  Utils
 		$local = \DateTime::createFromFormat( 'Y-m-d H:i:s', $dateTimestamp , new \DateTimeZone( $fromTimezone ) );
 		$local->setTimeZone(new \DateTimeZone($toTimezone));
 
-		return $local->format('Y-m-d H:i:s'); // output: 2011-04-26 22:45:00
+		return $local->format( $format ); // output: 2011-04-26 22:45:00
 
 	}
 
-	static function convertUTC2Timezone( $dateTimestamp, $toTimezone = 'America/Los_Angeles' )
+
+	static function convertUTC2Timezone( $dateTimestamp, $toTimezone = 'America/Los_Angeles', $format = 'Y-m-d H:i:s'  )
 	{
-		return self::convertTimestampToTimeZone( $dateTimestamp,'UTC', $toTimezone );
+		return self::convertTimestampToTimeZone( $dateTimestamp,'UTC', $toTimezone, $format );
 	}
 }
