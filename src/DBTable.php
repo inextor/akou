@@ -877,14 +877,14 @@ class DBTable
 		$tables = array();
 
 		$phpCode = $namespace ? "namespace $namespace;\n": '';
+		$phpCode.= 'use \akou\DBTable;';
 
 		while( $row = $res->fetch_row()  )
 		{
 			$tableName	= $row[ 0 ];
 			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable{';
 
-			$fieldsRes= $mysqli->query( 'describe `'.$mysqli->real_escape_string( $table_name ).'`');
-			$fields	 = array();
+			$fieldsRes	= self::query( 'describe `'.self::$connection->real_escape_string( $tableName ).'`');
 
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
