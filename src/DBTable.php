@@ -100,6 +100,41 @@ class DBTable
 			$this->_conn = $connection;
 	}
 
+	public static function escape( $param )
+	{
+		return self::$connection->real_escape_string( $param );
+	}
+
+	static function escapeCSV( $string, $mysqli = NULL )
+	{
+		$conn			= $mysqli ? $mysqli : self::$connection;
+		$array			= str_getcsv( $string );
+		$escapedValues	= array();
+
+		foreach( $array as $value )
+		{
+			$escapedValues[] = $conn->real_escape_string( $value );
+		}
+
+		return '"'.implode( '","', $escapedValues ).'"';
+	}
+
+	public static function getTotalRows($conn = NULL)
+	{
+		$mysqli		= empty( $conn ) ? self::$connection : $conn;
+		$resTotal	= $mysqli->query('SELECT FOUND_ROWS()');
+
+		if( !$resTotal )
+			throw new SystemException
+			(
+				'An error occurred please try again later'
+				,'Make sure SQL_CALC_FOUND_ROWS was added to the previous query'
+			);
+
+		$totalRow	= $resTotal->fetch_row();
+		return $totalRow[ 0 ];
+	}
+
 	public static function query( $sql_query )
 	{
 		return self::$connection->query( $sql_query );
@@ -119,9 +154,12 @@ class DBTable
 	/*
 	 * $dictionaryIndex the index dictionary example dictionary by id
 	 * if false return a simple array
-	 */
-	public static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL )
+	*/
+	public static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
 	{
+		$className 	= static::getBaseClassName();
+		$asArray	= $className === 'DBTable';
+
 		$conn 	= $connection ? $connection : self::$connection;
 		$resSql = $conn->query( $sql );
 
@@ -134,21 +172,38 @@ class DBTable
 
 		while( $row = $resSql->fetch_assoc() )
 		{
-			$_obj = new static();
-			$_obj->assignFromArray( $row );
-
-			if( $dictionaryIndex && !empty( $_obj->{ $dictionaryIndex } ) )
+			if( $asArray )
 			{
-				$result[ $_obj->{$dictionaryIndex} ] = $_obj;
+				if( $dictionaryIndex )
+				{
+					if( !empty( $_obj->{ $dictionaryIndex } ) )
+						$result[ $row[ $dictionaryIndex ] ] =  $row;
+				}
+				else
+				{
+					$result[] =  $row;
+				}
 			}
 			else
 			{
-				$result[] = $_obj;
+				$_obj = new static();
+				$_obj->assignFromArray( $row );
+
+				if( $dictionaryIndex )
+				{
+					if( empty( $_obj->{ $dictionaryIndex } ) )
+						$result[ $_obj->{$dictionaryIndex} ] = $_obj;
+				}
+				else
+				{
+					$result[] = $_obj;
+				}
 			}
 		}
 
 		return $result;
 	}
+
 
 	public static function createFromQuery($query, $connection = NULL)
 	{
@@ -894,5 +949,6 @@ class DBTable
 			$phpCode .= '}'.PHP_EOL;
 		}
 		eval( $phpCode ); //The evil one
+		return $phpCode;
 	}
 }
