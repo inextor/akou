@@ -187,3 +187,86 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 	function validate( $required_on_save, $ignore_on_save )
 	function validateField( $key, $flags, $params )
 	public static function importDbSchema( $namespace = '')
+
+##Example Insert/Update
+
+```php
+
+//includes here
+
+use \akou\ApiResponse;
+use \akou\DBTable;
+use \akou\Utils;
+use \akou\LoggableException;
+use \akou\SystemException;
+use \akou\ValidationException;
+use \akou\SessionException;
+
+$apiResponse	= new ApiResponse();
+
+try
+{
+	global $mysqli;
+
+	$requestingUser	= API::getUserFromSessionHash('');
+
+	if(! $requestingUser )
+		throw new SessionException('Session has expired');
+
+	$invoice		= new invoice();
+	$isUpdate		= !empty( $_POST['id'] );
+
+	if( $isUpdate )
+	{
+		$invoice->id	= $_POST['id'];
+
+		if( !$invoice->load() )
+			throw new NotFoundException
+			(
+				'The item was not found'
+				,'User was looking for id '.$_POST['id']
+			);
+	}
+
+	$invoice->assignFromArray( $_POST );
+
+	if( $isUpdate )
+	{
+		$invoide->validateUpdate();
+
+		if( !$invoice->updateDb() )
+		{
+			throw new SystemException
+			(
+				"An error occourred please try again later"
+				,$invoice->getLastQuery()
+			);
+		}
+	}
+	else
+	{
+		$invoice->validateInsert();
+
+		if( !$invoice->insertDb() )
+		{
+			throw new SystemException
+			(
+				"An error occourred please try again later"
+				,$invoice->getLastQuery()
+			);
+		}
+	}
+
+	$apiResponse->setData( $invoice->toArrayExclude() );
+	$apiResponse->setResult( 1 );
+	$apiResponse->output();
+}
+catch(\Exception $e)
+{
+	$apiResponse->setError( $e );
+	$apiResponse->output();
+}
+
+$apiResponse->setMsg('An error occurred please try again later');
+$apiResponse->output();
+```
