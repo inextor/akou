@@ -87,42 +87,46 @@ $user->phone = 'NULL';
 ##Utils:
 
 		//query
-		$mysqli_res = DBTable::query( $sql_query );
+```php
+$mysqli_res = DBTable::query( $sql_query );
+```
 
 		//getArrayFromQuery( $sql, $keyIndex, $mysqli_connection );
-		$arrayOfUsers	= getArrayFromQuery( 'SELECT * FROM users','id');
+```php
+$arrayOfUsers	= getArrayFromQuery( 'SELECT * FROM users','id');
+```
 		//$arrayOfUsers   = array( 3=>new user(..., 15=> new user(..., .. )
 
 		//createFromQuery($sql, $connection = NULL)
 		$user			= user::createFromQuery('Select user from ....');
 
-		//allow to select mulitple tables
-		//also you can select the same table multiple times
-		$sql_bunch_of_tables = 'SELECT '.user::getUniqSelect().'
-				,'.user::getUniqSelect().'
-				,'.user::getUniqSelect('approvedByUser').'
-				,'.image::getUniqSelect().'
-				,'.image::getUniqSelect('banerImage').'
-				,'.tabl::queUniqSelect().'
-			FROM user
-			JOIN image as profileImage ON ....
-			JOIN image as bannerImage ON ....
-			JOIN tabl ON ...
-			....';
+You can select from mulitple tables or select the same table multiple times
 
-		//sql_bunch_of_tables will be a huge select
+```php
+$sql_bunch_of_tables = 'SELECT '.user::getUniqSelect().'
+		,'.user::getUniqSelect().'
+		,'.user::getUniqSelect('approvedByUser').'
+		,'.image::getUniqSelect().'
+		,'.image::getUniqSelect('banerImage').'
+		,'.tabl::queUniqSelect().'
+	FROM user
+	JOIN image as profileImage ON ....
+	JOIN image as bannerImage ON ....
+	JOIN tabl ON ...
+	....';
 
-		$res_bunch_of_tables	= DBTable::query( $sql_bunch_of_tables );
+$res_bunch_of_tables	= DBTable::query( $sql_bunch_of_tables );
 
-		while( $row = $res_bunch_of_tables->fetch_assoc() )
-		{
-			//createFromUniqArray($array,$asTableName=null)
-			$user			= user	::createFromUniqArray( $row );
-			$approvedByUser	= user	::createFromUniqArray( $row, 'aprovedByUser' );
-			$bannerImage	= image	::createFromUniqArray( $row )
-			$bannerImage	= image	::createFromUniqArray( $row, 'bannerImage' )
-			$tbl			= tbl	::createFromUniqArray( $row );
-		}
+while( $row = $res_bunch_of_tables->fetch_assoc() )
+{
+	//createFromUniqArray($array,$asTableName=null)
+	$user			= user	::createFromUniqArray( $row );
+	$approvedByUser	= user	::createFromUniqArray( $row, 'aprovedByUser' );
+	$bannerImage	= image	::createFromUniqArray( $row )
+	$bannerImage	= image	::createFromUniqArray( $row, 'bannerImage' )
+	$tbl			= tbl	::createFromUniqArray( $row );
+}
+```
 
 
 ####
