@@ -123,8 +123,8 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 	//createFromUniqArray($array,$asTableName=null)
 	$user			= user	::createFromUniqArray( $row );
 	$approvedByUser	= user	::createFromUniqArray( $row, 'aprovedByUser' );
-	$bannerImage	= image	::createFromUniqArray( $row )
-	$bannerImage	= image	::createFromUniqArray( $row, 'bannerImage' )
+	$profileImage	= image	::createFromUniqArray( $row, 'profileImage' );
+	$bannerImage	= image	::createFromUniqArray( $row, 'bannerImage' );
 	$tbl			= tbl	::createFromUniqArray( $row );
 }
 ```
