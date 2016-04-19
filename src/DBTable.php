@@ -189,15 +189,13 @@ class DBTable
 				$_obj = new static();
 				$_obj->assignFromArray( $row );
 
-				if( $dictionaryIndex )
+
+				if( $dictionaryIndex && !empty( $_obj->{ $dictionaryIndex } ) )
 				{
-					if( empty( $_obj->{ $dictionaryIndex } ) )
-						$result[ $_obj->{$dictionaryIndex} ] = $_obj;
+					$result[ $_obj->{$dictionaryIndex} ] = $_obj;
 				}
 				else
-				{
 					$result[] = $_obj;
-				}
 			}
 		}
 
