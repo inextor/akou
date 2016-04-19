@@ -1,4 +1,3 @@
-<?php
 #akou
 Ass Kicked orm utils, because other orm libs are better
 
@@ -10,7 +9,10 @@ Ass Kicked orm utils, because other orm libs are better
 the main class has the next functions
 
 ###CRUD
-	//Defining the class
+
+Defining the class
+
+
 	class user extends \akou\DBTable
 	{
 		var $name;
@@ -18,47 +20,71 @@ the main class has the next functions
 		var $created;
 		var $phone;
 	}
-	//Or you can use
-	DBTable::$connection = $mysqli_connection;
-	DBTable::importDBSchema();//This will be create the classes for you db;
-	DBTable::importDBSchema('\my\super\lib');//Clases will be created in the namespace \my\super\lib
-	//its recommended that you save the clases in a file
-	$phpCode = DBTable::importDbSchema();//Save phpCode in a file like tables.php
 
-	//And later use it
+
+Or you can use
+
+
+```php
+DBTable::$connection = $mysqli_connection;
+DBTable::importDBSchema();//This will be create the classes for you db;
+DBTable::importDBSchema('\my\super\lib');//Clases will be created in the namespace \my\super\lib
+```
+
+its recommended that you save the clases in a file
+
+```php
+$phpCode = DBTable::importDbSchema();//Save phpCode in a file like tables.php
+```
+
+And later use it
+
+```php
 	include_once(__DIR__.'/akou/src/DBTable.php');
 	include_once(__DIR__.'/akou/src/LoggableException.php');
 	include_once(__DIR__.'/akou/src/Utils.php');
 	include_once('tables.php');//dont forget to add <?php to the beginning of the file
+```
 
+##basic usage
+
+```php
 	$user			= new user();
 	//$user->id		= 1;
 	$user->name		='';
 	$user->password	= hashFunction('password');
 	$user->created  = 'CURRENT_TIMESTAMP';
-
-	//it will inser a user with the values
-	//( id=1,password='hashstring',created='2016-10-12 14:00:03')
-	//name and phone will be ignored and the mysql
-	//will fail or set the default value
 	$user->insertDb();
-	//User has now id=1,name='',password=>hashstring,created='2016-10-12 14:00:03'
-	//in db has name = db default phone = db default or if has a default
+```
 
-	//To force name to be empty
-	$user->name = 'EMPTY';
+it will insert in table user the following values
+id=1
+password='hashstring'
+lcreated='2016-10-12 14:00:03'
 
-	//To force name to be NULL
-	$user->phone = 'NULL';
+name and phone will be ignored in the insert
+and the mysql will fail or set the default values
+
+
+To force name to be empty
+
+```php
+$user->name = 'EMPTY';
+```
+
+
+To force name to be NULL
+
+```php
+$user->phone = 'NULL';
+```
 
 	$user->updateDb();//Will set in db name = '' and phone = NULL
-
 	$user->name	= 'Jhon Doe';
 	$user->updateDb('name') //Only updates name
-
 	$user->deleteDb();//delete the record with id = 1
 
-Utils:
+##Utils:
 
 		//query
 		$mysqli_res = DBTable::query( $sql_query );
