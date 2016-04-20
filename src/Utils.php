@@ -330,9 +330,7 @@ class  Utils
 		$local->setTimeZone(new \DateTimeZone($toTimezone));
 
 		return $local->format( $format ); // output: 2011-04-26 22:45:00
-
 	}
-
 
 	static function convertUTC2Timezone( $dateTimestamp, $toTimezone = 'America/Los_Angeles', $format = 'Y-m-d H:i:s'  )
 	{
