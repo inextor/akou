@@ -100,6 +100,21 @@ class DBTable
 			$this->_conn = $connection;
 	}
 
+	public static function autocommit( $autocommit = TRUE )
+	{
+		self::$connection->autocommit( $autocommit );
+	}
+
+	public static function commit($flags=0, $name=NULL)
+	{
+		return self::$connection->commit( $flags=0,$name);
+	}
+
+	public static function rollback( $flags=0,$name =NULL)
+	{
+		self::$connection->rollback( $flags, $name );
+	}
+
 	public static function escape( $param )
 	{
 		return self::$connection->real_escape_string( $param );
