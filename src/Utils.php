@@ -22,9 +22,9 @@ class  Utils
 
 	const GENERIC_MESSAGE_ERROR		= '';
 
-	public static $LOG_LEVEL		= self::LOG_LEVEL_DEBUG;//
-	public static $DB_MAX_LOG_LEVEL	= self::LOG_LEVEL_DEBUG;
-	public static $DB_DEBUG_SEVER	= TRUE;
+	public static $LOG_LEVEL			= self::LOG_LEVEL_DEBUG;//
+	public static $DB_MAX_LOG_LEVEL		= self::LOG_LEVEL_DEBUG;
+	public static $DEBUG_SERVER			= TRUE;
 
 	public static $DEBUG				= FALSE;
 	public static $LOG_CLASS			= FALSE;
@@ -108,7 +108,7 @@ class  Utils
 		if( $keyword == "" || $log_level > self::$LOG_LEVEL )
 			return;
 
-		if( self::$DB_DEBUG_SEVER )
+		if( self::$DEBUG_SERVER )
 		{
 			include_once( __DIR__.'/ChromePhp.php' );
 
