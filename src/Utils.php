@@ -24,7 +24,8 @@ class  Utils
 
 	public static $LOG_LEVEL			= self::LOG_LEVEL_DEBUG;//
 	public static $DB_MAX_LOG_LEVEL		= self::LOG_LEVEL_DEBUG;
-	public static $DEBUG_SERVER			= TRUE;
+	public static $DEBUG_SERVER			= FALSE;
+	public static $DEBUG_VIA_ERROR_LOG	= FALSE;
 
 	public static $DEBUG				= FALSE;
 	public static $LOG_CLASS			= FALSE;
@@ -128,10 +129,8 @@ class  Utils
 			$log->insertDb();
 		}
 
-		if( Utils::isDebugEnviroment() )
+		if( self::$DEBUG_VIA_ERROR_LOG )
 		{
-			//$small_msg	= substr( "$keyword $message",0,180).PHP_EOL;
-			//$to_save	= str_replace("\n",'',$small_msg);
 			error_log( $keyword );
 			error_log( $message );
 		}
