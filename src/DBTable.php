@@ -122,8 +122,17 @@ class DBTable
 
 	static function escapeCSV( $string, $mysqli = NULL )
 	{
+		$conn	= $mysqli ? $mysqli : self::$connection;
+		$array	= str_getcsv( $string );
+
+		return escapeArrayValues( $array );
+	}
+
+	static function escapeArrayValues( $array, $mysqli = NULL  )
+	{
+		if( count( $array ) === 0 ) return "";
+
 		$conn			= $mysqli ? $mysqli : self::$connection;
-		$array			= str_getcsv( $string );
 		$escapedValues	= array();
 
 		foreach( $array as $value )
