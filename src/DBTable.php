@@ -790,10 +790,11 @@ class DBTable
 		$this->validate( DBTable::REQUIRED_ON_UPDATE, DBTable::IGNORE_ON_UPDATE);
 	}
 
-	function validate( $required_on_save, $ignore_on_save )
+	function validate( $required_on_save, $ignore_on_save, $alternateMsg = '' )
 	{
 		$class_name = get_class( $this );
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
+		$altMessage	= $alternateMsg ? $alternateMsg.' ' : '';
 
 		if( empty( $arrayFlags ) )
 			return;
@@ -804,8 +805,8 @@ class DBTable
 			{
 				throw new SystemException
 				(
-					'Ocurrio un error interno'
-					,'No existe la propiedad'.$key.' En la tabla '.$class_name.' Arreglar inmediatamente Reportarlo '
+					$altMessage.'System Error '
+					,'There is no property key "'.$key.'" in table '.$class_name.' report to developer inmediately '
 				);
 			}
 
@@ -836,7 +837,7 @@ class DBTable
 				if( ($attr_flags & $required_on_save) )
 					throw new ValidationException
 					(
-						$key.' cant be empty'
+						$altMessage.$key.' cant be empty '
 						,'Automatic field validation'
 					);
 			}
@@ -847,52 +848,55 @@ class DBTable
 		}
 	}
 
-	function validateField( $key, $flags, $params )
+	function validateField( $key, $flags, $params, $alternateMsg = '' )
 	{
+		$altMessage	= $alternateMsg ? $alternateMsg.' ' : '';
+
 		if( DBTable::INT_VALUE & $flags != 0 )
 		{
 			if( ! ctype_digit( (string)$this->{$key} ) )
 			{
-				throw new ValidationException($key.' is not a valid number');
+				throw new ValidationException($altMessage.$key.' is not a valid number ');
 			}
 
-			if( !empty( $params['min'] ) )
+			if( !empty( $params['min'] ) && intval( $this->{$key} ) < intval( $params['min'] ) )
 			{
-				if( intval( $this->{$key} ) < intval( $params['min'] ) )
-				{
-					throw new ValidationException('the minimun value for '.$key.' is '.$params['min'] );
-				}
+				throw new ValidationException
+				(
+					$alternateMsg.'The minimun value for '.$key.' is '.$params['min']
+				);
 			}
-			if( !empty( $params['max'] ) )
+
+			if( !empty( $params['max'] ) &&  intval( $this->{$key} ) > intval( $params['max'] ) )
 			{
-				if( intval( $this->{$key} ) > intval( $params['max'] ) )
-				{
-					throw new ValidationException('the maximun value for '.$key.' is '.$params['min'] );
-				}
+				throw new ValidationException
+				(
+					$alternateMsg.'The maximun value for '.$key.' is '.$params['min']
+				);
 			}
 		}
 		elseif( ( DBTable::STRING_VALUE & $flags ) != 0 )
 		{
-			if( !empty( $params['min'] ) )
+			if( !empty( $params['min'] ) && mb_strlen( $this->{$key} ) < intval( $params['min'] ) )
 			{
-				if( mb_strlen( $this->{$key} ) < intval( $params['min'] ) )
-				{
-					throw new ValidationException('the minimun value for '.$key.' is '.$params['min'] );
-				}
+				throw new ValidationException
+				(
+					$altMessage.'The minimun value for '.$key.' is '.$params['min']
+				);
 			}
-			if( !empty( $params['max'] ) )
+			if( !empty( $params['max'] ) && mb_strlen( $this->{$key} ) > intval( $params['max'] ) )
 			{
-				if( mb_strlen( $this->{$key} ) > intval( $params['max'] ) )
-				{
-					throw new ValidationException('the maximun value for '.$key.' is '.$params['min'] );
-				}
+				throw new ValidationException
+				(
+					$altMessage.'The maximun value for '.$key.' is '.$params['min']
+				);
 			}
 		}
 		elseif( ( DBTable::FLOAT_VALUE & $flags ) != 0 )
 		{
 			if( !is_numeric( $this->{$key} ) )
 			{
-				throw new ValidationException($key.' is not a valid float number');
+				throw new ValidationException($altMessage.' '.$key.'"'.$this->{$key}.'" is not a valid float number');
 			}
 		}
 		elseif( ( DBTable::PHONE_VALUE & $flags ) != 0 )
@@ -901,14 +905,14 @@ class DBTable
 
 			if( preg_match_all( '/[0-9]/', $this->{$key}, $tmp ) < 10 )
 			{
-				throw new ValidationException($key.' is not a valid phone number');
+				throw new ValidationException($altMessage.$key.' "'.$this->{$key}.'" is not a valid phone number');
 			}
 		}
 		elseif( ( DBTable::EMAIL_VALUE & $flags ) != 0 )
 		{
 			if (!filter_var($this->{$key}, FILTER_VALIDATE_EMAIL) === false)
 			{
-				throw new ValidationException($key.' is not a valid email');
+				throw new ValidationException($altMessage.$key.' "'.$this->{$key}.'" is not a valid email');
 			}
 		}
 		elseif( ( DBTable::DOMAIN_VALUE & $flags ) != 0 )
@@ -917,6 +921,7 @@ class DBTable
 			{
 				throw new ValidationException
 				(
+					$altMessage.$key.' "'.$this->{$key}.'" is not a valid domain name'
 				);
 			}
 		}
@@ -927,22 +932,25 @@ class DBTable
 
 			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key}) || !strtotime( $this->{$key}) )
 			{
-				throw new ValidationException($key.' is not a valid date time');
+				throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
 			}
 		}
 		elseif( ( DBTable::TIME_VALUE ) & $flags != 0 )
 		{
 
-			if( !preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $this->{key}) )
+			if( !preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $this->{$key}) )
 			{
-				throw new ValidationException($key.' is not a valid time value');
+				throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid time value');
 			}
 		}
 		elseif( ( DBTable::ENUM_VALUE & $flags ) != 0 )
 		{
 			if(! in_array( $this->{$key}, $params['values'] ) )
 			{
-				throw new ValidationException($key.' is not valid', 'Value is'.$this->{$key}.print_r( $params['values'],true));
+				throw new ValidationException
+				(
+					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'],true)
+				);
 			}
 		}
 	}
