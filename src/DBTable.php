@@ -125,7 +125,7 @@ class DBTable
 		$conn	= $mysqli ? $mysqli : self::$connection;
 		$array	= str_getcsv( $string );
 
-		return escapeArrayValues( $array );
+		return self::escapeArrayValues( $array );
 	}
 
 	static function escapeArrayValues( $array, $mysqli = NULL  )
