@@ -557,9 +557,10 @@ class DBTable
 		$this->setWhereStringNonEmptyValues();
 		$sql = 'DELETE FROM `'.self::getBaseClassName().'` WHERE '.$this->_sqlCmp.' LIMIT 1';
 		$this->_lastQuery = $sql;
-		return $this->_conn->query( $sql );
 
+		return $this->_conn->query( $sql );
 	}
+
 	function deleteFromDb()
 	{
 		deleteDb();
@@ -930,9 +931,17 @@ class DBTable
 			if( $this->{$key} == 'CURRENT_TIMESTAMP' )
 				return;
 
-			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key}) || !strtotime( $this->{$key}) )
+			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/",$this->{$key}))
 			{
-				throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
+				if(	strtotime( $this->{$key})===FALSE )
+				{
+					throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
+				}
+				else
+				{
+					//TODO move this to insert or update
+					$this->{$key} = date('Y-m-d H:i:s', strtotime($this->{$key}));
+				}
 			}
 		}
 		elseif( ( DBTable::TIME_VALUE ) & $flags != 0 )
