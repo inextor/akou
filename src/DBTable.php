@@ -31,6 +31,8 @@ class DBTable
 	const DONT_EXPORT_EXTERNAL	= 131072;
 	const TIME_VALUE			= 262144;
 	const INSERT_EMPTY_DEFAULT	= 524288; //For blob,text,json,etc without default value
+	const DATE_VALUE			= 1048576;
+
 
 	 //Dont add to array when is calle $obj->toArrayExclude()
 	//const NO_NULL				=	131072; //Cant be set 'NULL'	//not implemented yet
@@ -494,6 +496,7 @@ class DBTable
 					continue;
 				}
 
+
 				if( empty( $this->{$name} ) )
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
@@ -512,6 +515,21 @@ class DBTable
 						);
 					}
 					continue;
+				}
+
+				if( ( $attr_flags & DBTable::TIMESTAMP_VALUE ) != 0 )
+				{
+					if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/",$this->{$name}))
+					{
+						$this->{$name} = date('Y-m-d H:i:s', strtotime($this->{$name}));
+					}
+				}
+				elseif( ( $attr_flags & DBTable::DATE_VALUE ) != 0 )
+				{
+					if( !preg_match("/^\d{4}-\d{2}-\d{2}$/",$this->{$name}))
+					{
+						$this->{$name} = date('Y-m-d', strtotime($this->{$name}));
+					}
 				}
 
 				$array_fields[] = '`'.$name.'`';
@@ -937,10 +955,15 @@ class DBTable
 				{
 					throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
 				}
-				else
+			}
+		}
+		elseif( ( DBTable::DATE_VALUE ) & $flags != 0 )
+		{
+			if( !preg_match("/^\d{4}-\d{2}-\d{2}$/",$this->{$key}))
+			{
+				if(	strtotime( $this->{$key})===FALSE )
 				{
-					//TODO move this to insert or update
-					$this->{$key} = date('Y-m-d H:i:s', strtotime($this->{$key}));
+					throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
 				}
 			}
 		}
