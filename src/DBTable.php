@@ -124,7 +124,7 @@ class DBTable
 
 	static function escapeCSV( $string, $mysqli = NULL )
 	{
-		$conn	= $mysqli ? $mysqli : self::$connection;
+		$conn	= $mysqli ?: self::$connection;
 		$array	= str_getcsv( $string );
 
 		return self::escapeArrayValues( $array );
@@ -134,7 +134,7 @@ class DBTable
 	{
 		if( count( $array ) === 0 ) return "";
 
-		$conn			= $mysqli ? $mysqli : self::$connection;
+		$conn			= $mysqli ?: self::$connection;
 		$escapedValues	= array();
 
 		foreach( $array as $value )
@@ -186,7 +186,7 @@ class DBTable
 		$className 	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
 
-		$conn 	= $connection ? $connection : self::$connection;
+		$conn 	= $connection ?: self::$connection;
 		$resSql = $conn->query( $sql );
 
 		if( !$resSql )
@@ -232,7 +232,7 @@ class DBTable
 	public static function createFromQuery($query, $connection = NULL)
 	{
 
-		$conn = $connection ? $connection : self::$connection;
+		$conn = $connection ?: self::$connection;
 
 		$result = $conn->query( $query );
 
@@ -1012,5 +1012,37 @@ class DBTable
 		}
 		eval( $phpCode ); //The evil one
 		return $phpCode;
+	}
+
+	/*
+		$row	= array();
+		$stmt	= DBTable::getStmtBindResult('Select * from XXX whre yyy',$row );
+
+		while( $stmt->fetch() )
+		{
+			// do something with row
+		}
+
+		$stmt->close();
+	 */
+	public static function getStmtBindResult( $query,&$row, $mysqli )
+	{
+		$conn			= $mysqli ?: self::$connection;
+
+		if ( $stmt = $conn->prepare( $query ))
+		{
+			$stmt->execute();
+			$meta = $stmt->result_metadata();
+
+			while ($field = $meta->fetch_field())
+			{
+				$row[$field->name]	= '';
+				$params[] = &$row[ $field->name ];
+			}
+
+			call_user_func_array(array($stmt, 'bind_result'), $params);
+			return $stmt;
+		}
+		return FALSE;
 	}
 }
