@@ -1020,29 +1020,30 @@ class DBTable
 
 		while( $stmt->fetch() )
 		{
-			// do something with row
+			// do something with $row
 		}
 
 		$stmt->close();
 	 */
-	public static function getStmtBindResult( $query,&$row, $mysqli )
+	public static function getStmtBindResult( $query,&$row, $mysqli=NULL )
 	{
 		$conn			= $mysqli ?: self::$connection;
 
-		if ( $stmt = $conn->prepare( $query ))
+		if( $stmt = $conn->prepare( $query ))
 		{
 			$stmt->execute();
 			$meta = $stmt->result_metadata();
 
 			while ($field = $meta->fetch_field())
 			{
-				$row[$field->name]	= '';
-				$params[] = &$row[ $field->name ];
+				$row[ $field->name ]	= '';
+				$params[]				= &$row[ $field->name ];
 			}
 
 			call_user_func_array(array($stmt, 'bind_result'), $params);
 			return $stmt;
 		}
+
 		return FALSE;
 	}
 }
