@@ -397,6 +397,12 @@ class DBTable
 			$this->{$name} = $array[ $name ];
 			$i++;
 		}
+
+		if( $i === 0 )
+		{
+			error_log('WARNING zero assigns from array '.get_class( $this ));
+		}
+
 		return $i;
 	}
 
@@ -429,7 +435,7 @@ class DBTable
 				$firstIndex	= strpos( $this->_conn->error,'\'')+1;
 				$lastIndex 	= strrpos( $this->_conn->error,'\'');
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
-				error_log('Error with '.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
+				error_log('Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
 			}
 			else
 			{
@@ -440,7 +446,7 @@ class DBTable
 		return $result;
 	}
 
-	function getInsertSql()
+	function getInsertSql($ignore = FALSE)
 	{
 		$array_fields	= array();
 		$array_values	= array();
@@ -564,7 +570,7 @@ class DBTable
 
 		$sql_insert_fields = implode( ',',$array_fields);
 		$sql_insert_values = implode( ',',$array_values);
-		$sql_insert_string = 'INSERT INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
+		$sql_insert_string = 'INSERT'.($ignore ? ' IGNORE ' :' ').'INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
 								VALUES ( '.$sql_insert_values.' )';
 
 		return $sql_insert_string;
@@ -999,17 +1005,18 @@ class DBTable
 		while( $row = $res->fetch_row()  )
 		{
 			$tableName	= $row[ 0 ];
-			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable{';
+			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable'.PHP_EOL.'{'.PHP_EOL;
 
 			$fieldsRes	= self::query( 'describe `'.self::$connection->real_escape_string( $tableName ).'`');
 
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
-				$phpCode .= ' var $'.$fieldRow->Field.';';
+				$phpCode .= '    var $'.$fieldRow->Field.';'.PHP_EOL;
 			}
 
 			$phpCode .= '}'.PHP_EOL;
 		}
+
 		eval( $phpCode ); //The evil one
 		return $phpCode;
 	}
@@ -1042,6 +1049,46 @@ class DBTable
 
 			call_user_func_array(array($stmt, 'bind_result'), $params);
 			return $stmt;
+		}
+
+		return FALSE;
+	}
+
+	public static function search()
+	{
+		$cmp_a		= array();
+		$name_class = get_class( $this );
+
+		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($this as $name => $value)
+		{
+			if( in_array( $name , $array_names ) )
+				continue;
+
+			if( property_exists($name_class,$name) && isset($this->{$name}) )
+			{
+				if( $this->{$name} === 'NULL' )
+					$cmp_a[] = '`'.$name.'` IS NULL';
+				else
+					$cmp_a[] = '`'.$name.'` = "'.$this->_conn->real_escape_string( $value ).'"';
+			}
+		}
+
+		if( count( $cmp_a ) === 0 )
+		{
+			return FALSE;
+		}
+
+		$_sql	= 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.implode(' OR ',$cmp_a ).' LIMIT 1';
+
+		$result = $this->_conn->query( $_sql );
+
+		if( $result && $row = $result->fetch_assoc( ) )
+		{
+			$this->assignFromArray( $row );
+			$this->setWhereString();
+			return TRUE;
 		}
 
 		return FALSE;
