@@ -1032,7 +1032,7 @@ class DBTable
 
 		$stmt->close();
 	 */
-	public static function getStmtBindResult( $query,&$row, $mysqli=NULL )
+	public static function getStmtBindResult( $query,&$row,$mysqli=NULL )
 	{
 		$conn			= $mysqli ?: self::$connection;
 
@@ -1048,6 +1048,35 @@ class DBTable
 			}
 
 			call_user_func_array(array($stmt, 'bind_result'), $params);
+			return $stmt;
+		}
+
+		return FALSE;
+	}
+
+	public static function getStmtBindRawRowResult( $query,&$row,&$row_header, $mysqli=NULL )
+	{
+		$conn			= $mysqli ?: self::$connection;
+		$addHeader		= is_array( $row_header );
+		$size			= 0;
+
+		if( $stmt = $conn->prepare( $query ))
+		{
+			$stmt->execute();
+			$meta = $stmt->result_metadata();
+
+			$i = 0;
+			while ($field = $meta->fetch_field())
+			{
+				if( $addHeader )
+					$row_header[] 		= $field->name;
+
+				$row	[] = '';
+				$params	[] = &$row[ $i ];
+				$i++;
+			}
+			//$stmt->bind_result( $row );
+			call_user_func_array(array($stmt, 'bind_result'), $params );
 			return $stmt;
 		}
 
