@@ -212,9 +212,8 @@ class DBTable
 			}
 			else
 			{
-				$_obj = new static();
-				$_obj->assignFromArray( $row );
 
+				$_obj = static::createFromArray( $row );
 
 				if( $dictionaryIndex && !empty( $_obj->{ $dictionaryIndex } ) )
 				{
@@ -415,7 +414,7 @@ class DBTable
 	}
 
 
-	function insertDb()
+	function insertDb( $ignore = FALSE )
 	{
 		$this->_lastQuery	= $this->getInsertSql();
 		$result			= $this->_conn->query( $this->_lastQuery );
