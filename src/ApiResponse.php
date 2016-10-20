@@ -78,7 +78,7 @@ class ApiResponse
 	/**
 	*	Método para mandar a bufer (echo) el objeto con sus atributos usando json_encode
 	**/
-	function output( $isCORS = TRUE )
+	function output( $isCORS = TRUE, $must_exit = true )
 	{
 		header( 'Access-Control-Allow-Origin: *' );
 		header( 'Cache-Control: no-cache, must-revalidate' );
@@ -86,6 +86,8 @@ class ApiResponse
 
 		$this->timestamp	= date('Y-m-d H:i:s');
 		echo json_encode( $this );
-		exit();
+
+		if( $must_exit )
+			exit();
 	}
 }
