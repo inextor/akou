@@ -76,7 +76,7 @@ $user->name = 'EMPTY';
 To force name to be NULL
 
 ```php
-$user->phone = 'NULL';
+$user->phone = NULL
 ```
 
 	$user->updateDb();//Will set in db name = '' and phone = NULL
