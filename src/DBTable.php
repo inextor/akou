@@ -416,7 +416,7 @@ class DBTable
 
 	function insertDb( $ignore = FALSE )
 	{
-		$this->_lastQuery	= $this->getInsertSql();
+		$this->_lastQuery	= $this->getInsertSql( $ignore );
 		$result			= $this->_conn->query( $this->_lastQuery );
 		$class_name		= get_class( $this );
 
