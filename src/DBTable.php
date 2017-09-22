@@ -10,6 +10,16 @@ class DBTable
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
 
+
+	const UNSET_TRIMED_VALUES	= 1;
+	const UNSET_ZEROS			= 2;
+	const UNSET_NULLS			= 4;
+	const UNSET_BLANKS			= 8;
+	const UNSET_ALL				= 15;
+	const UNSET_ALL_BUT_ZEROS	= 13;
+	const UNSET_ALL_BUT_NULLS	= 11;
+
+
 	const TRIM_ON_SAVE			= 1;
 	const INT_VALUE				= 2;	// ✓
 	const STRING_VALUE			= 5;	// ✓
@@ -1122,10 +1132,15 @@ class DBTable
 		return FALSE;
 	}
 
-	public function unsetEmptyValues( $unsetNulls= TRUE, $unsetBlanks=TRUE, $trimValues=TRUE, $unsetZeros = FALSE )
+	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
 	{
 		$obj			= $this;
 		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		$unsetZeros		= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
+		$unsetNulls 	= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
+		$unsetBlanks	= ( $flag & DBTable::UNSET_BLANKS ) !== 0;
+		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
 
 		foreach ($obj as $name => $value)
 		{
@@ -1136,13 +1151,15 @@ class DBTable
 
 			if( empty( $trimValue ) )
 			{
-				if( !$unsetZeros && $trimValue === 0 )
-				{
+				if( !$unsetZeros && ( $trimValue === 0 || $trimValue === "0" || $trimValue === 0.0 ))
 					continue;
-				}
+
+				if( !$unsetNull && $value === NULL )
+					continue;
 
 				if( !$unsetBlanks && $trimValue === '' )
 					continue;
+
 
 				unset( $this->{$name} );
 			}
