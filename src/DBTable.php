@@ -239,7 +239,7 @@ class DBTable
 	}
 
 
-	public static function createFromQuery($query, $connection = NULL)
+	public static function createFromQuery( $query, $connection = NULL)
 	{
 
 		$conn = $connection ?: self::$connection;
@@ -1162,12 +1162,11 @@ class DBTable
 				if( !$unsetBlanks && $trimValue === '' )
 					continue;
 
-				unset( $this->{$name} );
+				unset( $this->{ $name } );
 			}
 			else if( $unsetInvalidDates &&  $trimValue === '0000-00-00 00:00:00' )
 			{
-				error_log('Unsegint '.$name );
-				unset( $this->{$name} );
+				unset( $this->{ $name } );
 			}
 		}
 	}
