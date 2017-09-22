@@ -619,7 +619,7 @@ class DBTable
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, $array_names ) || empty( $value) )
+			if( in_array( $name, $array_names ) /*|| empty( $value)*/ )
 				continue;
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
@@ -1120,5 +1120,32 @@ class DBTable
 		}
 
 		return FALSE;
+	}
+
+	public function unsetEmptyValues( $unsetNulls= TRUE, $unsetBlanks=TRUE, $trimValues=TRUE, $unsetZeros = FALSE )
+	{
+		$obj			= $this;
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array($name , $array_names ) )
+				continue;
+
+			$trimValue = $trimValues ? $value : trim( $value );
+
+			if( empty( $trimValue ) )
+			{
+				if( !$unsetZeros && $trimValue === 0 )
+				{
+					continue;
+				}
+
+				if( !$unsetBlanks && $trimValue === '' )
+					continue;
+
+				unset( $this->{$name} );
+			}
+		}
 	}
 }
