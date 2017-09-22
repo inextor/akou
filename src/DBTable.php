@@ -15,10 +15,11 @@ class DBTable
 	const UNSET_ZEROS			= 2;
 	const UNSET_NULLS			= 4;
 	const UNSET_BLANKS			= 8;
-	const UNSET_ALL				= 15;
-	const UNSET_ALL_BUT_ZEROS	= 13;
-	const UNSET_ALL_BUT_NULLS	= 11;
+	const UNSET_INVALID_DATES	= 16;
 
+	const UNSET_ALL				= 31;
+	const UNSET_ALL_BUT_ZEROS	= 29;
+	const UNSET_ALL_BUT_NULLS	= 27;
 
 	const TRIM_ON_SAVE			= 1;
 	const INT_VALUE				= 2;	// ✓
@@ -629,7 +630,7 @@ class DBTable
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, $array_names ) /*|| empty( $value)*/ )
+			if( in_array( $name, $array_names ) || !isset( $this->{$name} ) )
 				continue;
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
@@ -1092,7 +1093,7 @@ class DBTable
 		return FALSE;
 	}
 
-	public static function search()
+	public  function search()
 	{
 		$cmp_a		= array();
 		$name_class = get_class( $this );
@@ -1141,6 +1142,7 @@ class DBTable
 		$unsetNulls 	= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
 		$unsetBlanks	= ( $flag & DBTable::UNSET_BLANKS ) !== 0;
 		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
+		$unsetInvalidDates = ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0 ;
 
 		foreach ($obj as $name => $value)
 		{
@@ -1154,13 +1156,17 @@ class DBTable
 				if( !$unsetZeros && ( $trimValue === 0 || $trimValue === "0" || $trimValue === 0.0 ))
 					continue;
 
-				if( !$unsetNull && $value === NULL )
+				if( !$unsetNulls && $value === NULL )
 					continue;
 
 				if( !$unsetBlanks && $trimValue === '' )
 					continue;
 
-
+				unset( $this->{$name} );
+			}
+			else if( $unsetInvalidDates &&  $trimValue === '0000-00-00 00:00:00' )
+			{
+				error_log('Unsegint '.$name );
 				unset( $this->{$name} );
 			}
 		}
