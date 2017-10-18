@@ -514,7 +514,7 @@ class DBTable
 				}
 
 
-				if( empty( $this->{$name} ) )
+				if( empty( $this->{$name} ) && $this->{$name} !== '0' )
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
