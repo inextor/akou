@@ -392,7 +392,7 @@ class DBTable
 		{
 
 			if(
-				empty( $array[ $name ] )
+				!isset( $array[ $name ] )      
 				|| in_array( $name, $array_names )
 				|| !property_exists( $class_name, $name )
 				)
