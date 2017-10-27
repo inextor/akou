@@ -392,7 +392,7 @@ class DBTable
 		{
 
 			if(
-				empty( $array[ $name ] )
+				!isset( $array[ $name ] )      
 				|| in_array( $name, $array_names )
 				|| !property_exists( $class_name, $name )
 				)
@@ -513,7 +513,12 @@ class DBTable
 					continue;
 				}
 
+<<<<<<< HEAD
 				if( !isset( $this->{$name} ) )
+=======
+
+				if( empty( $this->{$name} ) && $this->{$name} !== '0' )
+>>>>>>> c2b71b72b5e0e93f1efed3b3d618e298b9a6af3b
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
