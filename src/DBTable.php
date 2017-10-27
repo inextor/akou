@@ -315,7 +315,7 @@ class DBTable
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
-		if( $only_id && property_exists($name_class,'id') && !empty( $this->id ))
+		if( $only_id && property_exists($name_class,'id') && isset( $this->id ))
 		{
 			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
 			return;
@@ -513,8 +513,7 @@ class DBTable
 					continue;
 				}
 
-
-				if( empty( $this->{$name} ) )
+				if( !isset( $this->{$name} ) )
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
@@ -551,7 +550,7 @@ class DBTable
 
 				$array_fields[] = '`'.$name.'`';
 
-				if( $value === 'NULL' )
+				if( $this->{$name} === NULL )
 				{
 					$array_values[] = ' NULL ';
 				}
@@ -560,7 +559,7 @@ class DBTable
 					$this->{$name}	= date('Y-m-d H:i:s');
 					$array_values[] = '"'.$this->{$name}.'"';
 				}
-				else if( $value	=== 'EMPTY' )
+				else if( $value	=== '' )
 				{
 					$array_values[] = '""';
 				}
@@ -573,8 +572,7 @@ class DBTable
 						$this->{$name} = $new_value;
 					}
 
-					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value )
-						. '"';
+					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value ). '"';
 				}
 			}
 		}
@@ -1022,7 +1020,7 @@ class DBTable
 
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
-				$phpCode .= '    var $'.$fieldRow->Field.';'.PHP_EOL;
+				$phpCode .= '	var $'.$fieldRow->Field.';'.PHP_EOL;
 			}
 
 			$phpCode .= '}'.PHP_EOL;
