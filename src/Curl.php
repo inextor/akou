@@ -4,7 +4,6 @@ namespace AKOU;
 
 class Curl 
 {
-
 	function __construct( $url )
 	{
 		$this->responseHeaders 	= array();
@@ -23,43 +22,51 @@ class Curl
 		$this->method			= 'GET';
 		$this->files			= array();
 		$this->ssl_verify_peer	= TRUE;
+		$this->response			= NULL;
 	}
 
 	function setFollowLocation( $follow_location = TRUE )
 	{
 		$this->follow_location = $follow_location;
+		return $this;
 	}
 
 
 	function setTimeout( $timeout )
 	{
 		$this->timeout	= $timeout;
+		return $this;
 	}
 
 	function sendAsMultipartFormData()
 	{
 		$this->isMultipart	= true;
+		return $this;
 	}
 
 	function setPostData( $dataArray )
 	{
 		$this->method		= 'POST';
 		$this->setParameters( $dataArray );
+		return $this;
 	}
 
-	function addHeader( $header, $value )
+	function setHeader( $header, $value )
 	{
 		$this->requestHeaders[ strtoupper( $header ) ] = $value;
+		return $this;
 	}
 
 	function setMethod( $method )
 	{
 		$this->method	= strtoupper( $method );
+		return $this;
 	}
 
 	function setParameters( $dataArray )
 	{
 		$this->fields		= $dataArray;
+		return $this;
 	}
 
 	function setJsonPost( $jsonStringOrArray )
@@ -67,15 +74,17 @@ class Curl
 		$this->custom_request	= 'POST';
 		$this->method			= 'POST';
 		$this->postData			= is_array( $jsonStringOrArray ) ? json_encode( $jsonStringOrArray ) : $jsonStringOrArray;
-		$this->addHeader('Content-Type','application/json');
+		$this->setHeader('Content-Type','application/json');
+		return $this;
 	}
 
-	function addHeaders( $headers )
+	function setHeaders( $headers )
 	{
 		foreach( $headers as $header=>$value )
 		{
-			$this->addHeader( $header, $value );
+			$this->setHeader( $header, $value );
 		}
+		return $this;
 	}
 
 	function getResponseHeaders()
@@ -87,11 +96,13 @@ class Curl
 	{
 		$this->user		= $user;
 		$this->password	=$password;
+		return $this;
 	}
 
 	function setUserAgent( $user_agent )
 	{
 		$this->user_agent	= $user_agent;
+		return $this;
 	}
 
 	function execute()
@@ -117,13 +128,13 @@ class Curl
 
 		if( count( $this->files ) )
 		{
-			$this->addHeader('Content-Type','multipart/form-data'); 
+			$this->setHeader('Content-Type','multipart/form-data'); 
 			\curl_setopt( $this->curl, CURLOPT_POSTFIELDS, $this->postData );
 		}
 		else if( !empty( $this->postData ) )
 		{
 			if( empty( $this->requestHeaders[strtoupper( 'Content-Type' )] ) )
-				$this->addHeader('Content-Type','application/x-www-form-urlencoded');
+				$this->setHeader('Content-Type','application/x-www-form-urlencoded');
 
 			$postString	= $this->postData;
 
@@ -134,7 +145,7 @@ class Curl
 
 			\curl_setopt( $this->curl, CURLOPT_POSTFIELDS, $postString );
 			$size		= strlen( $postString );
-			$this->addHeader( 'Content-Length', $size );
+			$this->setHeader( 'Content-Length', $size );
 		}
 
 
@@ -196,7 +207,7 @@ class Curl
 		$this->info		= \curl_getinfo( $this->curl );//, CURLINFO_HTTP_CODE );
 
 		if( $this->info['http_code'] )
-			$this->status	= $this->info['http_code'];
+			$this->status_code	= $this->info['http_code'];
 
 		$headerArray	= explode("\n", $header );
 
