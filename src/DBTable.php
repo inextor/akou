@@ -10,6 +10,17 @@ class DBTable
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
 
+
+	const UNSET_TRIMED_VALUES	= 1;
+	const UNSET_ZEROS			= 2;
+	const UNSET_NULLS			= 4;
+	const UNSET_BLANKS			= 8;
+	const UNSET_INVALID_DATES	= 16;
+
+	const UNSET_ALL				= 31;
+	const UNSET_ALL_BUT_ZEROS	= 29;
+	const UNSET_ALL_BUT_NULLS	= 27;
+
 	const TRIM_ON_SAVE			= 1;
 	const INT_VALUE				= 2;	// ✓
 	const STRING_VALUE			= 5;	// ✓
@@ -240,7 +251,7 @@ class DBTable
 	}
 
 
-	public static function createFromQuery($query, $connection = NULL)
+	public static function createFromQuery( $query, $connection = NULL)
 	{
 
 		$conn = $connection ?: self::$connection;
@@ -316,7 +327,7 @@ class DBTable
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
-		if( $only_id && property_exists($name_class,'id') && !empty( $this->id ))
+		if( $only_id && property_exists($name_class,'id') && isset( $this->id ))
 		{
 			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
 			return;
@@ -393,7 +404,7 @@ class DBTable
 		{
 
 			if(
-				empty( $array[ $name ] )
+				!isset( $array[ $name ] )      
 				|| in_array( $name, $array_names )
 				|| !property_exists( $class_name, $name )
 				)
@@ -432,10 +443,11 @@ class DBTable
 		$result			= $this->_conn->query( $this->_lastQuery );
 		$class_name		= get_class( $this );
 
-		if($result && property_exists($class_name,'id'))
+		if($result && property_exists($class_name,'id') && !empty( $this->id )  )
 		{
 			$this->id = $this->_conn->insert_id;
 		}
+
 		$this->setWhereString();
 
 		if( $this->_conn->error )
@@ -513,8 +525,7 @@ class DBTable
 					continue;
 				}
 
-
-				if( empty( $this->{$name} ) )
+				if( !isset( $this->{$name} ) )
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
@@ -551,7 +562,7 @@ class DBTable
 
 				$array_fields[] = '`'.$name.'`';
 
-				if( $value === 'NULL' )
+				if( $this->{$name} === NULL )
 				{
 					$array_values[] = ' NULL ';
 				}
@@ -560,7 +571,7 @@ class DBTable
 					$this->{$name}	= date('Y-m-d H:i:s');
 					$array_values[] = '"'.$this->{$name}.'"';
 				}
-				else if( $value	=== 'EMPTY' )
+				else if( $value	=== '' )
 				{
 					$array_values[] = '""';
 				}
@@ -573,8 +584,7 @@ class DBTable
 						$this->{$name} = $new_value;
 					}
 
-					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value )
-						. '"';
+					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value ). '"';
 				}
 			}
 		}
@@ -631,7 +641,7 @@ class DBTable
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, $array_names ) || empty( $value) )
+			if( in_array( $name, $array_names ) || !isset( $this->{$name} ) )
 				continue;
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
@@ -1022,7 +1032,7 @@ class DBTable
 
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
-				$phpCode .= '    var $'.$fieldRow->Field.';'.PHP_EOL;
+				$phpCode .= '	var $'.$fieldRow->Field.';'.PHP_EOL;
 			}
 
 			$phpCode .= '}'.PHP_EOL;
@@ -1094,7 +1104,7 @@ class DBTable
 		return FALSE;
 	}
 
-	public static function search()
+	public  function search()
 	{
 		$cmp_a		= array();
 		$name_class = get_class( $this );
@@ -1132,5 +1142,43 @@ class DBTable
 		}
 
 		return FALSE;
+	}
+
+	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
+	{
+		$obj			= $this;
+		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+		$unsetZeros		= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
+		$unsetNulls 	= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
+		$unsetBlanks	= ( $flag & DBTable::UNSET_BLANKS ) !== 0;
+		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
+		$unsetInvalidDates = ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0 ;
+
+		foreach ($obj as $name => $value)
+		{
+			if( in_array($name , $array_names ) )
+				continue;
+
+			$trimValue = $trimValues ? $value : trim( $value );
+
+			if( empty( $trimValue ) )
+			{
+				if( !$unsetZeros && ( $trimValue === 0 || $trimValue === "0" || $trimValue === 0.0 ))
+					continue;
+
+				if( !$unsetNulls && $value === NULL )
+					continue;
+
+				if( !$unsetBlanks && $trimValue === '' )
+					continue;
+
+				unset( $this->{ $name } );
+			}
+			else if( $unsetInvalidDates &&  $trimValue === '0000-00-00 00:00:00' )
+			{
+				unset( $this->{ $name } );
+			}
+		}
 	}
 }
