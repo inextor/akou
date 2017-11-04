@@ -82,14 +82,26 @@ class DBTable
 232 = 4294967296
 */
 
-
-
-
-
-
 	var $_sqlCmp='';
 	var $_lastQuery;
 	var $_conn;
+
+
+	public static function init($host, $db, $user, $pw)
+	{
+		$mysqli = new \mysqli($__host, $__user, $__password, $__db );
+
+		if( $mysqli->connect_errno )
+		{
+			echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+			exit();
+		}
+
+		$mysqli->query("SET NAMES 'utf8'");
+		$mysqli->set_charset('utf8');
+
+		DBTable::$connection				= $mysqli;
+	}
 
 	function __construct( $connection = NULL )
 	{
