@@ -110,7 +110,7 @@ class Curl
 		$this->curl		= \curl_init();
 
 		\curl_setopt( $this->curl, CURLOPT_URL,$this->url );
-		\curl_setopt( $this->curl, CURLOPT_RETURNTRANSFER, 0);
+		\curl_setopt( $this->curl, CURLOPT_RETURNTRANSFER, 1);
 
 		if( strtoupper( $this->method )	=== 'POST' || !empty( $this->files) || !empty( $this->postData ) )
 		{
