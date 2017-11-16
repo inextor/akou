@@ -335,4 +335,17 @@ class  Utils
 	{
 		return self::convertTimestampToTimeZone( $dateTimestamp,'UTC', $toTimezone, $format );
 	}
+
+	static function startsWith( $toFind, $haystack )
+	{
+	     $length = strlen($toFind);
+	     return (substr($haystack, 0, $length) === $toFind);
+	}
+
+	static function endsWith( $toFind, $haystack)
+	{
+	    $length = strlen($toFind);
+
+	    return $length === 0 || (substr($haystack, -$length) === $toFind);
+	}
 }
