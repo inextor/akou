@@ -97,10 +97,9 @@ class DBTable
 	var $_lastQuery;
 	var $_conn;
 
-
-	public static function init($host, $db, $user, $pw)
+	public static function init($host, $user, $password ,$db)
 	{
-		$mysqli = new \mysqli($__host, $__user, $__password, $__db );
+		$mysqli = new \mysqli($host, $user, $password, $db );
 
 		if( $mysqli->connect_errno )
 		{
@@ -404,7 +403,7 @@ class DBTable
 		{
 
 			if(
-				!isset( $array[ $name ] )      
+				!isset( $array[ $name ] )
 				|| in_array( $name, $array_names )
 				|| !property_exists( $class_name, $name )
 				)
