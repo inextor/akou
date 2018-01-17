@@ -23,6 +23,7 @@ class Curl
 		$this->files			= array();
 		$this->ssl_verify_peer	= TRUE;
 		$this->response			= NULL;
+		$this->curl_errors		= array();
 	}
 
 	function setFollowLocation( $follow_location = TRUE )
@@ -47,7 +48,7 @@ class Curl
 	function setPostData( $dataArray )
 	{
 		$this->method		= 'POST';
-		$this->setParameters( $dataArray );
+		$this->postData	= $dataArray;
 		return $this;
 	}
 
@@ -95,7 +96,7 @@ class Curl
 	function setUser( $user, $password = NULL )
 	{
 		$this->user		= $user;
-		$this->password	=$password;
+		$this->password	= $password;
 		return $this;
 	}
 
@@ -200,31 +201,48 @@ class Curl
 		//MMMM
 
 		$result 		= \curl_exec( $this->curl );
-		$header_size	= \curl_getinfo($this->curl , CURLINFO_HEADER_SIZE );
 
-		$header			= \substr($result, 0, $header_size);
-		$this->response	= \substr($result, $header_size);
-		$this->info		= \curl_getinfo( $this->curl );//, CURLINFO_HTTP_CODE );
-
-		if( $this->info['http_code'] )
-			$this->status_code	= $this->info['http_code'];
-
-		$headerArray	= explode("\n", $header );
-
-		for( $i=1;$i<\count($headerArray); $i++ )
+		if( $result === false )
 		{
-			$h		= \trim( $headerArray[ $i ] );
-			if( !$h )
-				continue;
+			$this->addCurlError();
+		}
+		else
+		{
+			$header_size	= \curl_getinfo($this->curl , CURLINFO_HEADER_SIZE );
 
-			$fields = explode( ': ', $h );
-			if( isset( $fields[ 1 ] ) )
+			$header			= \substr($result, 0, $header_size);
+			$this->response	= \substr($result, $header_size);
+			$this->info		= \curl_getinfo( $this->curl );//, CURLINFO_HTTP_CODE );
+
+			if( $this->info['http_code'] )
+				$this->status_code	= $this->info['http_code'];
+
+			$headerArray	= explode("\n", $header );
+
+			for( $i=1;$i<\count($headerArray); $i++ )
 			{
-				$this->responseHeaders[ strtoupper( \trim($fields[0]) ) ] = \trim($fields[1]);
+				$h		= \trim( $headerArray[ $i ] );
+				if( !$h )
+					continue;
+
+				$fields = explode( ': ', $h );
+				if( isset( $fields[ 1 ] ) )
+				{
+					$this->responseHeaders[ strtoupper( \trim($fields[0]) ) ] = \trim($fields[1]);
+				}
 			}
 		}
+		
 
 		//print_r( $this->requestHeaders );
 		\curl_close( $this->curl );
+	}
+
+	function addCurlError()
+	{
+		$error = curl_error( $this->curl  );
+
+		if( $error !== '' )
+			$this->curl_errors[] = $error; 
 	}
 }
