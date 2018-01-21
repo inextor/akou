@@ -747,6 +747,21 @@ class DBTable
 		}
 		return $_array;
 	}
+	
+    public static function getAttributes()
+    {
+        $class_name = get_called_class();
+        $vars       = get_class_vars( $class_name );
+        $array_names    = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
+
+        foreach( $array_names as $value)
+        {
+            if( isset( $vars[ $value ] ) )
+                unset( $vars[ $value ] );
+        }
+
+        return $vars;
+    }
 
 	function toArray()
 	{
