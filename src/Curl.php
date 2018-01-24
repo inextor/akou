@@ -60,7 +60,13 @@ class Curl
 
 	function setMethod( $method )
 	{
-		$this->method	= strtoupper( $method );
+		switch( strtoupper( $method ) )
+		{
+			case 'PUT':
+			case 'DELETE':
+				$this->method	= 'POST';
+				$this->custom_request = $method;
+		}
 		return $this;
 	}
 
@@ -72,7 +78,10 @@ class Curl
 
 	function setJsonPost( $jsonStringOrArray )
 	{
+		if( empty( $this->custom_request ) )
+	{
 		$this->custom_request	= 'POST';
+		}
 		$this->method			= 'POST';
 		$this->postData			= is_array( $jsonStringOrArray ) ? json_encode( $jsonStringOrArray ) : $jsonStringOrArray;
 		$this->setHeader('Content-Type','application/json');
