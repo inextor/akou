@@ -1,14 +1,14 @@
-#akou
+# akou
 Ass Kicked orm utils, because other orm libs are better
 
-#TODO
+# TODO
 	fix the README because is incomplete without format
 
-##DBTable
+## DBTable
 
 the main class has the next functions
 
-###CRUD
+### CRUD
 
 Defining the class
 
@@ -46,7 +46,7 @@ And later use it
 	include_once('tables.php');//dont forget to add <?php to the beginning of the file
 ```
 
-##basic usage
+## Basic usage
 
 ```php
 	$user			= new user();
@@ -69,7 +69,7 @@ and the mysql will fail or set the default values
 To force name to be empty
 
 ```php
-$user->name = 'EMPTY';
+$user->name = '';
 ```
 
 
@@ -84,7 +84,7 @@ $user->phone = NULL
 	$user->updateDb('name') //Only updates name
 	$user->deleteDb();//delete the record with id = 1
 
-##Utils:
+## Utils:
 
 		//query
 ```php
@@ -130,15 +130,17 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 ```
 
 
-####
+#### Some Functions
 
 	function getLastQuery()
 	function setWhereString($only_id = true )
 	function setWhereStringNonEmptyValues()
 	function assignFromArray()
+	```php
 		$user->assignFromArray( $_POST );//Assign all the non empty values from post
 		$user->assignFromArray( $_POST, 'name','id' ) //Only assign the non empty values from name and id
 		$user->assignFromArray( $_POST, array('name','id') ) //same as previous
+	```
 
 
 	public static function createFromArray($array, $connection=NULL)
@@ -148,6 +150,7 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 
 	function toArrayExclude()
 	function toArray()
+	```php
 		$user->toArray()  // array( 'id'=>1, 'name'=>'Jhon doe', 'age'=>'20','password'=>'kdlhdshheslks',phone='555-555-5555);
 		$user->toArray('id','name') //array( 'id'=1,'name'=>'jhon doe','phone'='555-555-5555)
 		$user->toArray(array('id','name') ) //same as previous
@@ -158,6 +161,7 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 		$user->toArrayExclude() //array( 'id'=>1, 'name'=>'Jhon doe','age'=>20,'phone'='555-555-5555');
 		$user->toArrayExclude('age') //array( 'id'=>1, 'name'=>'Jhon doe',,'phone'='555-555-5555');
 		$user->toArrayExclude(array('age')) //Same as previous
+	```
 
 	function load( $only_id = true, $for_update = false )
 
@@ -188,7 +192,7 @@ while( $row = $res_bunch_of_tables->fetch_assoc() )
 	function validateField( $key, $flags, $params )
 	public static function importDbSchema( $namespace = '')
 
-##Example Insert/Update
+## Example Insert/Update
 
 ```php
 
