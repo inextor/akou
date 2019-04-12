@@ -2,12 +2,14 @@
 
 namespace AKOU;
 
-class Curl 
+class Curl
 {
 	function __construct( $url )
 	{
-		$this->responseHeaders 	= array();
-		$this->requestHeaders	= array();
+		$this->response_headers 	= array();
+		$this->request_headers	= array();
+		$this->debug			= FALSE;
+		$this->status_code		= 0;
 
 		$this->user				= NULL;
 		$this->password			= NULL;
@@ -23,7 +25,8 @@ class Curl
 		$this->files			= array();
 		$this->ssl_verify_peer	= TRUE;
 		$this->response			= NULL;
-		$this->curl_errors		= array();
+		$this->error			= NULL;
+		$this->raw_response 	= NULL;
 	}
 
 	function setFollowLocation( $follow_location = TRUE )
@@ -48,13 +51,13 @@ class Curl
 	function setPostData( $dataArray )
 	{
 		$this->method		= 'POST';
-		$this->postData	= $dataArray;
+		$this->postData		= $dataArray;
 		return $this;
 	}
 
 	function setHeader( $header, $value )
 	{
-		$this->requestHeaders[ strtoupper( $header ) ] = $value;
+		$this->request_headers[ strtoupper( $header ) ] = $value;
 		return $this;
 	}
 
@@ -62,11 +65,18 @@ class Curl
 	{
 		switch( strtoupper( $method ) )
 		{
+			case 'GET':
+			case 'POST':
+				$this->method	= $method;
+				$this->custom_request = $method;
+				break;
 			case 'PUT':
 			case 'DELETE':
+			default:
 				$this->method	= 'POST';
 				$this->custom_request = $method;
 		}
+
 		return $this;
 	}
 
@@ -79,12 +89,13 @@ class Curl
 	function setJsonPost( $jsonStringOrArray )
 	{
 		if( empty( $this->custom_request ) )
-	{
-		$this->custom_request	= 'POST';
+		{
+			$this->custom_request	= 'POST';
 		}
 		$this->method			= 'POST';
 		$this->postData			= is_array( $jsonStringOrArray ) ? json_encode( $jsonStringOrArray ) : $jsonStringOrArray;
 		$this->setHeader('Content-Type','application/json');
+
 		return $this;
 	}
 
@@ -99,13 +110,13 @@ class Curl
 
 	function getResponseHeaders()
 	{
-		return $this->responseHeaders;
+		return $this->response_headers;
 	}
 
 	function setUser( $user, $password = NULL )
 	{
 		$this->user		= $user;
-		$this->password	= $password;
+		$this->password	=$password;
 		return $this;
 	}
 
@@ -131,6 +142,11 @@ class Curl
 			 \curl_setopt( $this->curl , CURLOPT_HTTPGET, true );
 		}
 
+		if( $this->debug )
+		{
+			curl_setopt($this->curl, CURLOPT_VERBOSE, true);
+		}
+
 		if( $this->custom_request )
 		{
 			 \curl_setopt( $this->curl , CURLOPT_CUSTOMREQUEST, $this->custom_request );
@@ -138,12 +154,12 @@ class Curl
 
 		if( count( $this->files ) )
 		{
-			$this->setHeader('Content-Type','multipart/form-data'); 
+			$this->setHeader('Content-Type','multipart/form-data');
 			\curl_setopt( $this->curl, CURLOPT_POSTFIELDS, $this->postData );
 		}
 		else if( !empty( $this->postData ) )
 		{
-			if( empty( $this->requestHeaders[strtoupper( 'Content-Type' )] ) )
+			if( empty( $this->request_headers[strtoupper( 'Content-Type' )] ) )
 				$this->setHeader('Content-Type','application/x-www-form-urlencoded');
 
 			$postString	= $this->postData;
@@ -161,7 +177,7 @@ class Curl
 
 		if( !empty( $this->user_agent )  )
 		{
-			\curl_setopt( $this->curl ,CURLOPT_USERAGENT ,$this->user_agent ); 
+			\curl_setopt( $this->curl ,CURLOPT_USERAGENT ,$this->user_agent );
 		}
 
 		if( !empty( $this->user ) )
@@ -180,7 +196,7 @@ class Curl
 
 		$headers = array();
 
-		foreach( $this->requestHeaders as $header=>$value )
+		foreach( $this->request_headers as $header=>$value )
 		{
 			$headers[] = $header.': '.$value;
 		}
@@ -209,49 +225,34 @@ class Curl
 		}
 		//MMMM
 
-		$result 		= \curl_exec( $this->curl );
+		$this->raw_response = \curl_exec( $this->curl );
+		$this->error	= \curl_error( $this->curl );
+		$header_size	= \curl_getinfo($this->curl , CURLINFO_HEADER_SIZE );
 
-		if( $result === false )
+		$header			= \substr($this->raw_response, 0, $header_size);
+		$this->response	= \substr($this->raw_response, $header_size);
+		$this->info		= \curl_getinfo( $this->curl );//, CURLINFO_HTTP_CODE );
+
+		if( $this->info['http_code'] )
+			$this->status_code	= $this->info['http_code'];
+
+		$headerArray	= explode("\n", $header );
+
+		for( $i=1;$i<\count($headerArray); $i++ )
 		{
-			$this->addCurlError();
-		}
-		else
-		{
-			$header_size	= \curl_getinfo($this->curl , CURLINFO_HEADER_SIZE );
+			$h		= \trim( $headerArray[ $i ] );
+			if( !$h )
+				continue;
 
-			$header			= \substr($result, 0, $header_size);
-			$this->response	= \substr($result, $header_size);
-			$this->info		= \curl_getinfo( $this->curl );//, CURLINFO_HTTP_CODE );
-
-			if( $this->info['http_code'] )
-				$this->status_code	= $this->info['http_code'];
-
-			$headerArray	= explode("\n", $header );
-
-			for( $i=1;$i<\count($headerArray); $i++ )
+			$fields = explode( ': ', $h );
+			if( isset( $fields[ 1 ] ) )
 			{
-				$h		= \trim( $headerArray[ $i ] );
-				if( !$h )
-					continue;
-
-				$fields = explode( ': ', $h );
-				if( isset( $fields[ 1 ] ) )
-				{
-					$this->responseHeaders[ strtoupper( \trim($fields[0]) ) ] = \trim($fields[1]);
-				}
+				$this->response_headers[ strtoupper( \trim($fields[0]) ) ] = \trim($fields[1]);
 			}
 		}
-		
 
-		//print_r( $this->requestHeaders );
+		//print_r( $this->request_headers );
 		\curl_close( $this->curl );
 	}
-
-	function addCurlError()
-	{
-		$error = curl_error( $this->curl  );
-
-		if( $error !== '' )
-			$this->curl_errors[] = $error; 
-	}
 }
+
