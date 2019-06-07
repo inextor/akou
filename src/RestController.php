@@ -34,17 +34,16 @@ class RestController
 
             if( $method !== "head" )
             {
-                error_log("Responding payload".$this->response);
                 echo $this->response;
-            }
-            else
-            {
-                //header("x-custom: ismethod");
             }
         }
         else if( method_exists( $this, $method) )
         {
 			$this->{$method}();
+            if( !empty( $this->response  ) )
+            {
+                echo $this->response;
+            }
         }
 		else
 		{
@@ -63,7 +62,7 @@ class RestController
     {
         header('Content-Type: text/plain');
         $this->response = $text;
-        //header('Content-length: '.strlen( $this->response ) );
+        header('Content-length: '.strlen( $this->response ) );
         return $text;
     }
 
