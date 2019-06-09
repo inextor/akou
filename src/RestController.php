@@ -9,10 +9,21 @@ class RestController
         $this->response = "";
 	}
 
+
+    function defaultOptions()
+    {
+       $this->setAllowHeader();
+    }
+
 	function setAllowHeader()
 	{
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
+        foreach($all_methods as $method )
+        {
+            if( method_exists( $this, \strtolower( $method ) ) )
+                $methods[] = $method;
+        }
 
 		header('Allow: '.join($methods,","));
 	}
@@ -88,7 +99,7 @@ class RestController
 
 		if( $_SERVER["CONTENT_TYPE"] == 'application/json' )
 		{
-			return json_decode( file_get_contents("php://input") );
+			return json_decode( file_get_contents("php://input"),true );
 		}
 	}
 }
