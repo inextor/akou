@@ -4,14 +4,11 @@ namespace AKOU;
 
 class Curl
 {
-	function formImageSaveToPath($obj_FILE,$dirname,$max_height=1200,$max_width=1350, $max_weight=5242880,$min_width=50)
+	function formImageSaveToPath($obj_FILE,$dirname, $max_height=1200,$max_width=1350, $max_weight=5242880,$min_width=50,$min_height)
 	{
 		global $mysqli;
 
-		$min_width  = 50;
-		$min_height = 50;
 		$min_weight = 0;
-
 		$return_var = new json_res();
 
 		$image_type = $obj_FILE['type'];
@@ -20,6 +17,7 @@ class Curl
 		if( $obj_FILE['error'] == 1 )
 		{
 			throw new StoreException('Ocurrió un error de red al subir la imagen, posiblemente el tamaño de la imagen es mayor a 5 Mb');
+			return false;
 		}
 
 
