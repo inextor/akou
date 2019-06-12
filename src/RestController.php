@@ -8,6 +8,7 @@ class RestController
 	{
         $this->response = "";
 		$this->allow_credentials = true;
+		$this->cors = false;
 	}
 
     function defaultOptions()
@@ -31,6 +32,11 @@ class RestController
 
 	function execute()
 	{
+		if( $this->cors )
+		{
+        //	header('Access-Control-Allow-Origin: *');
+		}
+
 		if( $this->allow_credentials )
 			header('Access-Control-Allow-Credentials: true');
 
