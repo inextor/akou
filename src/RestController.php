@@ -7,8 +7,8 @@ class RestController
 	function __construct()
 	{
         $this->response = "";
+		$this->allow_credentials = true;
 	}
-
 
     function defaultOptions()
     {
@@ -19,6 +19,7 @@ class RestController
 	{
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
+
         foreach($all_methods as $method )
         {
             if( method_exists( $this, \strtolower( $method ) ) )
@@ -30,6 +31,9 @@ class RestController
 
 	function execute()
 	{
+		if( $this->allow_credentials )
+			header('Access-Control-Allow-Credentials: true');
+
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
 
         if( $method === "get" || $method === "head" )
