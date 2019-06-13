@@ -18,6 +18,8 @@ class RestController
 
 	function setAllowHeader()
 	{
+	    //header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+		//header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept" />
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
 
@@ -26,6 +28,10 @@ class RestController
             if( method_exists( $this, \strtolower( $method ) ) )
                 $methods[] = $method;
         }
+
+		if(isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+
 
 		header('Allow: '.join($methods,","));
 	}
@@ -38,7 +44,10 @@ class RestController
 		}
 
 		if( $this->allow_credentials )
+		{
+			header('Access-Control-Allow-Origin: *');
 			header('Access-Control-Allow-Credentials: true');
+		}
 
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
 
