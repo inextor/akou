@@ -6,48 +6,106 @@ class RestController
 {
 	function __construct()
 	{
-		$response = "";
+        $this->response = "";
+		$this->allow_credentials = true;
+		$this->cors = false;
 	}
+
+    function defaultOptions()
+    {
+       $this->setAllowHeader();
+    }
 
 	function setAllowHeader()
 	{
+	    //header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+		//header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept" />
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
+
+        foreach($all_methods as $method )
+        {
+            if( method_exists( $this, \strtolower( $method ) ) )
+                $methods[] = $method;
+        }
+
+		if(isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+
 		header('Allow: '.join($methods,","));
 	}
 
 	function execute()
 	{
+		if( $this->cors )
+		{
+        //	header('Access-Control-Allow-Origin: *');
+		}
+
+		if( $this->allow_credentials )
+		{
+			header('Access-Control-Allow-Origin: *');
+			header('Access-Control-Allow-Credentials: true');
+		}
+
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
 
-		if( $method == 'HEADER' || $method == 'GET' )
-		{
-			if( isset( $this->get ) )
-			{
-				$this->get();
-				header('Content-Length: '.strlen($this->response) );
+        if( $method === "get" || $method === "head" )
+        {
+            if( !method_exists( $this, $method) )
+            {
+                $this->sendStatus(404)->text('Document not found');
+            }
+            else
+            {
+                $this->get();
+            }
 
-				if( $method == 'GET' )
-				{
-					echo $this->response;
-				}
-			}
-			else
-			{
-				$this->sendStatus(404);
-				header('Content-length: 0');
-			}
-		}
-		else if( is_callable( $this->{ $method } ) )
-		{
+            if( $method !== "head" )
+            {
+                echo $this->response;
+            }
+        }
+        else if( method_exists( $this, $method) )
+        {
 			$this->{$method}();
-		}
+            if( !empty( $this->response  ) )
+            {
+                echo $this->response;
+            }
+        }
 		else
 		{
 			http_response_code(405);
 			$this->setAllowHeader();
 		}
 	}
+
+    function sendStatus($code)
+    {
+        http_response_code( $code );
+        return $this;
+    }
+
+    function text($text)
+    {
+        header('Content-Type: text/plain');
+        $this->response = $text;
+        header('Content-length: '.strlen( $this->response ) );
+        return $text;
+    }
+
+    function json($result)
+    {
+        //error_log( print_r( $result) );
+        $this->response = json_encode( $result );
+        //error_log('Hader Content-length: '.strlen( $this->response ));
+        header('Content-length: '.strlen( $this->response ) );
+        //error_log('Header Content-Type: application/json');
+        header("Content-type: application/json; charset=utf-8");
+        //header('Content-Type: application/json');
+        return $result;
+    }
 
 	function getMethodParams()
 	{
@@ -59,7 +117,7 @@ class RestController
 
 		if( $_SERVER["CONTENT_TYPE"] == 'application/json' )
 		{
-			return json_decode( file_get_contents("php://input") );
+			return json_decode( file_get_contents("php://input"),true );
 		}
 	}
 
