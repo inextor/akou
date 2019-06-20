@@ -199,6 +199,38 @@ class DBTable
 		if( is_array( $array ) )
 			self::$_attrFlags = $array;
 	}
+
+	public static function getArrayFromQueryGroupByIndex($query,$index)
+	{
+		$className 	= static::getBaseClassName();
+		$asArray	= $className === 'DBTable';
+
+		$conn 	= $connection ?: self::$connection;
+		$resSql = $conn->query( $query );
+
+		if( !$resSql )
+		{
+			throw new SystemException( 'An error occours please try gain later', $query );
+		}
+
+		$result = array();
+
+		while( $row = $resSql->fetch_assoc() )
+		{
+			$data = $asArray ? $row : $obj = static::createFromArray( $row );
+			if( isset( $result[ $row[ $index ] ]) )
+			{
+				$result[ $index][] = $data;
+			}
+			else
+			{
+				$result[ $index ] = array( $data );
+			}
+		}
+
+		return $result;
+	}
+
 	/*
 	 * $dictionaryIndex the index dictionary example dictionary by id
 	 * if false return a simple array
