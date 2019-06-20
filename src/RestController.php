@@ -81,12 +81,6 @@ class RestController
 		}
 	}
 
-    function sendStatus($code)
-    {
-        http_response_code( $code );
-        return $this;
-    }
-
     function text($text)
     {
         header('Content-Type: text/plain');
