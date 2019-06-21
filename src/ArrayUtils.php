@@ -31,9 +31,14 @@ class ArrayUtils
 		$result = array();
 		foreach($array as $item)
 		{
-			if( !empty( $item[$property] ) || !empty( $item->{ $property } ) )
+		    if( is_object( $item ) )
 			{
-				$result[] = is_object( $item ) ? $item->{ $property } : $item[$property];
+				if( !empty( $item->{ $property } ) )
+						$result[] = $item->{ $property };
+			}
+			else if( !empty( $item[$property] ) )
+			{
+				$result[] = $item[$property];
 			}
 		}
 		return $result;
