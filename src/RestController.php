@@ -89,17 +89,6 @@ class RestController
         return $text;
     }
 
-    function json($result)
-    {
-        //error_log( print_r( $result) );
-        $this->response = json_encode( $result );
-        //error_log('Hader Content-length: '.strlen( $this->response ));
-        header('Content-length: '.strlen( $this->response ) );
-        //error_log('Header Content-Type: application/json');
-        header("Content-type: application/json; charset=utf-8");
-        //header('Content-Type: application/json');
-        return $result;
-    }
 
 	function getMethodParams()
 	{
@@ -126,12 +115,15 @@ class RestController
 		return $this;
 	}
 
-	function json($value)
-	{
-		header( 'Content-type: application/json');
-		$str = json_encode( $value );
-		$size = strlen( $str );
-		header( 'Content-Length: '.$size );
-		$this->response = $str;
-	}
+    function json($result)
+    {
+        //error_log( print_r( $result) );
+        $this->response = json_encode( $result );
+        //error_log('Hader Content-length: '.strlen( $this->response ));
+        header('Content-length: '.strlen( $this->response ) );
+        //error_log('Header Content-Type: application/json');
+        header("Content-type: application/json; charset=utf-8");
+        //header('Content-Type: application/json');
+        return $result;
+    }
 }
