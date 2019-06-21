@@ -118,7 +118,7 @@ class RestController
     function json($result)
     {
         //error_log( print_r( $result) );
-        $this->response = json_encode( $result );
+        $this->response = json_encode( $result,JSON_PRETTY_PRINT );
         //error_log('Hader Content-length: '.strlen( $this->response ));
         header('Content-length: '.strlen( $this->response ) );
         //error_log('Header Content-Type: application/json');
