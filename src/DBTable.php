@@ -9,6 +9,7 @@ class DBTable
 
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
+	public static $_parse_data_types = FALSE;
 
 
 	const UNSET_TRIMED_VALUES	= 1;
@@ -231,11 +232,59 @@ class DBTable
 		return $result;
 	}
 
+	public static function getFieldsInfo($result)
+	{
+		$finfo = $result->fetch_fields();
+		$field_info = array();
+
+		foreach( $finfo as $val )
+		{
+			$field_info[ $val->name ] = $val->type;
+		}
+		//error_log( json_encode( $field_info ) );
+		return $field_info;
+	}
+
+    static function getRowWithDataTypes($row,$fields_info )
+	{
+		$result = array();
+		foreach($fields_info as $name=>$type)
+		{
+			//error_log( $name );
+		    if( $row[ $name ] === null )
+			{
+				$result[ $name ]= null;
+			}
+			else
+			{
+				switch( $type )
+				{
+					case 16: //bit
+					case 1: //tinyint bool 
+					case 2: //smallint
+					case 3: //integer 3
+					case 9: //mediumint
+					case 8: //bigint serial
+							$result[ $name ] = intVal( $row[ $name ] ); 
+							break;
+					case 4: //float
+					case 5: //double
+					case 246: //decimal numeric 246
+							$result[ $name ] = floatVal( $row[ $name ] );
+					default:
+						$result[ $name ] = $row[ $name ];	
+						break;
+				}
+			}
+		}
+		return $result;
+	}
+
 	/*
 	 * $dictionaryIndex the index dictionary example dictionary by id
 	 * if false return a simple array
 	*/
-	public static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
+	function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
 	{
 		$className 	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -852,7 +901,7 @@ class DBTable
 		return $_array;
 	}
 
-	function load( $only_id = true, $for_update = false )
+	function load( $only_id = true, $for_update = false, $with_data_types = false )
 	{
 		$this->setWhereString($only_id);
 
@@ -868,7 +917,15 @@ class DBTable
 
 			if( $result && $row = $result->fetch_assoc( ) )
 			{
-				$this->assignFromArray( $row );
+				if( DBTable::$_parse_data_types || $with_data_types )
+				{
+					$fields_info = static::getFieldsInfo($result);
+					$this->assignFromArray( static::getRowWithDataTypes($row,$fields_info) );
+				}
+				else
+				{
+					$this->assignFromArray( $row );
+				}
 
 				if( $only_id )
 					$this->setWhereString();
