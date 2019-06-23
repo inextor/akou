@@ -299,8 +299,12 @@ class DBTable
 
 		$result = array();
 
-		while( $row = $resSql->fetch_assoc() )
+		$types_info = DBTable::$_parse_data_types ? DBTable::getFieldsInfo( $resSql ): NULL;
+
+		while( $data = $resSql->fetch_assoc() )
 		{
+		    $row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $data, $types_info ) : $data;
+
 			if( $asArray )
 			{
 				if( $dictionaryIndex )
@@ -338,8 +342,12 @@ class DBTable
 
 		$result = $conn->query( $query );
 
-		if( $result && $row = $result->fetch_assoc( ))
+
+		if( $result && $data = $result->fetch_assoc( ))
 		{
+		    $types_info = DBTable::$_parse_data_types ? self::getFieldsInfo( $result ) : NULL;
+		    $row = DBTable::$_parse_data_types ? self::getRowWithDataTypes( $data, $types_info ) : $data;
+
 			$_obj = new static( $connection );
 			$_obj->assignFromArray( $row );
 			$_obj->setWhereString( isset( $_obj->id ) );
@@ -1244,8 +1252,10 @@ class DBTable
 
 		$result = $this->_conn->query( $_sql );
 
-		if( $result && $row = $result->fetch_assoc( ) )
+		if( $result && $data = $result->fetch_assoc( ) )
 		{
+			$fields_info = static::getFieldsInfo($result);
+			$row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $row, $fields_info ) : $data;
 			$this->assignFromArray( $row );
 			$this->setWhereString();
 			return TRUE;
