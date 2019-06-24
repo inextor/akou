@@ -480,16 +480,19 @@ class DBTable
 		if( empty($num_args) || !is_array( $array ) )
 			return FALSE;
 
-		if( is_array( func_get_arg( 1 ) ) )
+		if( $num_args > 1 )
 		{
-			$indexes = func_get_arg( 1 );
-		}
-		else
-		{
-			for($i=1;$i<$num_args;$i++)
+			if( is_array( func_get_arg( 1 ) ) )
 			{
-		 		$indexes[] = func_get_arg( $i );
-		 	}
+				$indexes = func_get_arg( 1 );
+			}
+			else
+			{
+				for($i=1;$i<$num_args;$i++)
+				{
+			 		$indexes[] = func_get_arg( $i );
+			 	}
+			}
 		}
 
 		$class_name	 = get_class($this);
