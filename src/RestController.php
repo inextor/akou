@@ -33,8 +33,9 @@ class RestController
 
 		if(isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
             header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-
-		header('Allow: '.join($methods,","));
+        //header("Access-Control-Allow-Headers: *");
+		header("Access-Control-Allow-Methods: ".join(", ",$methods));
+		//header('Allow: '.join($methods,","));
 	}
 
 	function execute()
