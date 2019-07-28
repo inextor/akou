@@ -98,6 +98,7 @@ class Image
 
 			$file_name		  = $uniq_id . '.' . $file_ext;
 			$image_content	  = file_get_contents( $obj_FILE['tmp_name'] );
+			$original_filename = $obj_FILE['name'];
 
 			$image_width	= imagesx( $image_obj );
 			$image_height   = imagesy( $image_obj );
@@ -124,6 +125,7 @@ class Image
 			{
 				return Array(
 					"filename" => $file_name
+					,"original_filename"=>$original_filename
 					,"filenamepath" => $to_save_dirname."/".$file_name
 					,"content_type" => $image_type
 					,"size" => strlen( $image_content )
