@@ -271,6 +271,7 @@ class DBTable
 					case 5: //double
 					case 246: //decimal numeric 246
 							$result[ $name ] = floatVal( $row[ $name ] );
+							break;
 					default:
 						$result[ $name ] = $row[ $name ];	
 						break;
