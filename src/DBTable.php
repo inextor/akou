@@ -10,6 +10,7 @@ class DBTable
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
 	public static $_parse_data_types = FALSE;
+	static $_control_variable_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
 
 
 	const UNSET_TRIMED_VALUES	= 1;
@@ -97,6 +98,7 @@ class DBTable
 	var $_sqlCmp='';
 	var $_lastQuery;
 	var $_conn;
+	var $_is_duplicated_error=false;
 
 	public static function init($host, $user, $password ,$db)
 	{
@@ -371,11 +373,10 @@ class DBTable
 		$_clas_name	= $asTableName == null ?self::getBaseClassName() : $asTableName;
 		$c			= 0;
 		$obj		 = $this;
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		foreach ($obj as $name => $value)
 		{
-			if( in_array($name , $array_names ) )
+			if( in_array($name , DBTable::$_control_variable_names ) )
 				continue;
 
 			if(isset($array[$_clas_name.'__'.$c]))
@@ -394,11 +395,9 @@ class DBTable
 		$_clas_name	 = $asTableName == null ? self::getBaseClassName() : $asTableName;
 		$obj			= new static();
 
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
-
 		foreach ($obj as $name => $value)
 		{
-			if( in_array( $name , $array_names ) )
+			if( in_array( $name , DBTable::$_control_variable_names ) )
 				continue;
 
 			$fields[] ='`'.$_clas_name.'`.`'.$name.'` AS '.$_clas_name.'__'.($c++);
@@ -422,11 +421,9 @@ class DBTable
 			return;
 		}
 
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
-
 		foreach ($this as $name => $value)
 		{
-			if( in_array( $name , $array_names ) )
+			if( in_array( $name , DBTable::$_control_variable_names ) )
 				continue;
 
 			if( property_exists($name_class,$name) && isset($this->{$name}) )
@@ -443,13 +440,12 @@ class DBTable
 	function setWhereStringNonEmptyValues()
 	{
 		$cmp_a			= array();
-		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		$name_class= get_class($this);
 
 		foreach ($this as $name => $value)
 		{
-			if( in_array( $name, $array_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if( property_exists($name_class,$name) && isset($this->{$name}) )
@@ -497,14 +493,13 @@ class DBTable
 		}
 
 		$class_name	 = get_class($this);
-		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
 
 			if(
 				!isset( $array[ $name ] )
-				|| in_array( $name, $array_names )
+				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 				)
 
@@ -551,6 +546,9 @@ class DBTable
 
 		if( $this->_conn->error )
 		{
+
+			$this->_is_duplicated_error = $this->_conn->errno == 1062;
+
 			if( strpos( $this->_conn->error,'column') !== FALSE )
 			{
 				error_log( $this->_conn->error );
@@ -573,14 +571,13 @@ class DBTable
 		$array_fields	= array();
 		$array_values	= array();
 		$class_name	 	= get_class($this);
-		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($this as $name => $value)
 		{
 			if( property_exists($class_name,$name))
 			{
-				if( in_array( $name, $array_names ) )
+				if( in_array( $name, DBTable::$_control_variable_names) )
 				{
 					continue;
 				}
@@ -735,12 +732,11 @@ class DBTable
 		$_tmp			= $this;
 		$update_array	= array();
 		$name_class		= get_class( $this );
-		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, $array_names ) || !isset( $this->{$name} ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) || !isset( $this->{$name} ) )
 				continue;
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
@@ -814,12 +810,11 @@ class DBTable
 		$_array = array();
 		$obj	= $this;
 
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($obj as $name => $value)
 		{
-			if( in_array( $name,$array_names ) )
+			if( in_array( $name,DBTable::$_control_variable_names ) )
 				continue;
 
 			if(in_array( $name, $indexes ))
@@ -852,9 +847,8 @@ class DBTable
     {
         $class_name = get_called_class();
         $vars       = get_class_vars( $class_name );
-        $array_names    = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
-        foreach( $array_names as $value)
+        foreach( DBTable::$_control_variable_names as $value)
         {
             if( isset( $vars[ $value ] ) )
                 unset( $vars[ $value ] );
@@ -883,11 +877,10 @@ class DBTable
 		$obj	= $this;
 
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		foreach ($obj as $name => $value)
 		{
-			if( in_array( $name ,$array_names ) )
+			if( in_array( $name ,DBTable::$_control_variable_names ) )
 				continue;
 
 			if( !empty( $indexes ) && !in_array( $name, $indexes ))
@@ -1231,11 +1224,10 @@ class DBTable
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
-		$array_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		foreach ($this as $name => $value)
 		{
-			if( in_array( $name , $array_names ) )
+			if( in_array( $name , DBTable::$_control_variable_names) )
 				continue;
 
 			if( property_exists($name_class,$name) && isset($this->{$name}) )
@@ -1271,7 +1263,6 @@ class DBTable
 	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
 	{
 		$obj			= $this;
-		$array_names	= array('_sqlCmp','_lastQuery','_attrFlags','_conn');
 
 		$unsetZeros		= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
 		$unsetNulls 	= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
@@ -1281,7 +1272,7 @@ class DBTable
 
 		foreach ($obj as $name => $value)
 		{
-			if( in_array($name , $array_names ) )
+			if( in_array($name , DBTable::$_control_variable_names ) )
 				continue;
 
 			$trimValue = $trimValues ? $value : trim( $value );
