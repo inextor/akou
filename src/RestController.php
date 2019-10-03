@@ -84,6 +84,13 @@ class RestController
 		}
 	}
 
+	function raw($str)
+	{
+        $this->response = $str;
+        header('Content-length: '.strlen( $this->response ) );
+		return $str;
+	}
+
     function text($text)
     {
         header('Content-Type: text/plain');
