@@ -16,6 +16,25 @@ class RestController
        $this->setAllowHeader();
     }
 
+
+	//function getPaginationInfo($params,$page_size_param="page_size",$page_param="page",$max_page_size=50)
+	function getPaginationInfo($page,$page_size,$default_page_size=50)
+	{
+		$obj = new \stdClass();
+		$limit = intVal( $default_page_size );
+
+		if( !empty( $page_size ) )
+			$limit = intval( $page_size );
+
+		$obj->limit = $limit;
+		$obj->offset = 0;
+
+		if( !empty( $page ) )
+			$obj->offset = $obj->limit*intVal( $page );
+
+		return $obj;
+	}
+
 	function setAllowHeader()
 	{
 		if( isset( $_SERVER['HTTP_ORIGIN'] ) )
