@@ -262,12 +262,12 @@ class DBTable
 				switch( $type )
 				{
 					case 16: //bit
-					case 1: //tinyint bool 
+					case 1: //tinyint bool
 					case 2: //smallint
 					case 3: //integer 3
 					case 9: //mediumint
 					case 8: //bigint serial
-							$result[ $name ] = intVal( $row[ $name ] ); 
+							$result[ $name ] = intVal( $row[ $name ] );
 							break;
 					case 4: //float
 					case 5: //double
@@ -275,7 +275,7 @@ class DBTable
 							$result[ $name ] = floatVal( $row[ $name ] );
 							break;
 					default:
-						$result[ $name ] = $row[ $name ];	
+						$result[ $name ] = $row[ $name ];
 						break;
 				}
 			}
@@ -287,7 +287,7 @@ class DBTable
 	 * $dictionaryIndex the index dictionary example dictionary by id
 	 * if false return a simple array
 	*/
-	function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
+	static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
 	{
 		$className 	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
