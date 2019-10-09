@@ -183,7 +183,7 @@ class DBTable
 			);
 
 		$totalRow	= $resTotal->fetch_row();
-		return $totalRow[ 0 ];
+		return intVal( $totalRow[ 0 ]);
 	}
 
 	public static function query( $sql_query )
@@ -223,11 +223,11 @@ class DBTable
 			$data = $asArray ? $row : $obj = static::createFromArray( $row );
 			if( isset( $result[ $row[ $index ] ]) )
 			{
-				$result[ $index][] = $data;
+				$result[ $row[ $index] ][] = $data;
 			}
 			else
 			{
-				$result[ $index ] = array( $data );
+				$result[ $row[ $index ] ] = array( $data );
 			}
 		}
 
