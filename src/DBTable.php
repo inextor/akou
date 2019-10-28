@@ -941,6 +941,56 @@ class DBTable
 		return FALSE;
 	}
 
+	function assignFromArrayExcluding()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+		$array			= func_get_arg( 0 );
+
+		if( empty($num_args) || !is_array( $array ) )
+			return FALSE;
+
+		if( $num_args > 1 )
+		{
+			if( is_array( func_get_arg( 1 ) ) )
+			{
+				$indexes = func_get_arg( 1 );
+			}
+			else
+			{
+				for($i=1;$i<$num_args;$i++)
+				{
+			 		$indexes[] = func_get_arg( $i );
+			 	}
+			}
+		}
+
+		$class_name	 = get_class($this);
+		$i				= 0;
+		foreach( $this as $name => $value)
+		{
+
+			if(
+				!isset( $array[ $name ] )
+				|| in_array( $name, DBTable::$_control_variable_names )
+				|| in_array( $name, $indexes )
+			)
+			{
+				continue;
+			}
+
+			$this->{$name} = $array[ $name ];
+			$i++;
+		}
+
+		if( $i === 0 )
+		{
+			error_log('WARNING zero assigns from array '.get_class( $this ));
+		}
+
+		return $i;
+	}
+
 	function validateInsert()
 	{
 		$this->validate( DBTable::REQUIRED_ON_INSERT, DBTable::IGNORE_ON_INSERT);
