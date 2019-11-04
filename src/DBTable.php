@@ -794,7 +794,7 @@ class DBTable
 	function toArrayExcluding()
 	{
 		$args = func_get_args();
-		return static::toArrayExclude( ...$args );
+		return $this->toArrayExclude( ...$args );
 	}
 
 	function toArrayExclude()
@@ -950,7 +950,7 @@ class DBTable
 	function assignFromArrayExclude()
 	{
 		$args= func_get_args();
-		assignFromArrayExcluding( ...$args );
+		$this->assignFromArrayExcluding( ...$args );
 	}
 
 	function assignFromArrayExcluding()
