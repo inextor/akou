@@ -791,6 +791,12 @@ class DBTable
 		return 'UPDATE `'.self::getBaseClassName().'` SET '.$updatefields.' WHERE '.$this->_sqlCmp.' LIMIT 1';
 	}
 
+	function toArrayExcluding()
+	{
+		$args = func_get_args();
+		return static::toArrayExclude( ...$args );
+	}
+
 	function toArrayExclude()
 	{
 		$num_args		= func_num_args();
@@ -939,6 +945,12 @@ class DBTable
 			}
 		}
 		return FALSE;
+	}
+
+	function assignFromArrayExclude()
+	{
+		$args= func_get_args();
+		assignFromArrayExcluding( ...$args );
 	}
 
 	function assignFromArrayExcluding()
