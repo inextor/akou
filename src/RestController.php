@@ -16,6 +16,22 @@ class RestController
        $this->setAllowHeader();
     }
 
+	function getPaginationInfo($page,$page_size,$default_page_size=50)
+	{
+		$obj = new \stdClass();
+		$limit = intVal( $default_page_size );
+
+		if( !empty( $page_size ) )
+			$limit = intval( $page_size );
+
+		$obj->limit = $limit;
+		$obj->offset = 0;
+
+		if( !empty( $page ) )
+			$obj->offset = $obj->limit*intVal( $page );
+
+		return $obj;
+	}
 	function setAllowHeader()
 	{
 		if( isset( $_SERVER['HTTP_ORIGIN'] ) )
@@ -74,11 +90,14 @@ class RestController
 			$this->{$method}();
             if( !empty( $this->response  ) )
             {
-                echo $this->response;
+				error_log("ECHOING METHOD RESPONSE".$this->response );
             }
+                echo $this->response;
+			return;
         }
 		else
 		{
+		    error_log("METHOD DOES NOT EXISTS".$method );
 			http_response_code(405);
 			$this->setAllowHeader();
 		}
@@ -104,7 +123,9 @@ class RestController
 	{
 		if( $_SERVER["CONTENT_TYPE"] == 'application/x-www-form-urlencoded' )
 		{
-			parse_str( file_get_contents("php://input"), $post_vars);
+			$info = file_get_contents("php://input");
+			error_log( $info );
+			parse_str( $info, $post_vars);
 			return $post_vars;
 		}
 
@@ -112,6 +133,7 @@ class RestController
 		{
 			return json_decode( file_get_contents("php://input"),true );
 		}
+		return array();
 	}
 
 	function sendStatus($code )
@@ -125,10 +147,10 @@ class RestController
 		return $this;
 	}
 
-    function json($result)
+    function json($result,$flag=null)
     {
         //error_log( print_r( $result) );
-        $this->response = json_encode( $result,JSON_PRETTY_PRINT );
+		$this->response = empty( $flag ) ?  json_encode( $result ) : json_encode( $result, $flag );
         //error_log('Hader Content-length: '.strlen( $this->response ));
         header('Content-length: '.strlen( $this->response ) );
         //error_log('Header Content-Type: application/json');

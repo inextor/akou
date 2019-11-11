@@ -25,9 +25,9 @@ class ArrayUtils
 				return $x->{ $prop };
 		   return null;
 		}
-		if( isset( $array[ $prop ]) )
+		if( isset( $x[ $prop ]) )
 		{
-			return $array[ $prop ];
+			return $x[ $prop ];
 		}
 		return NULL;
 	}
