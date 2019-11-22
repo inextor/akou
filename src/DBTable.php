@@ -170,6 +170,46 @@ class DBTable
 		return '"'.implode( '","', $escapedValues ).'"';
 	}
 
+	public static function getAllProperties()
+	{
+		$args= func_get_args();
+		return static::getAllPropertiesExcept( ...$args );
+	}
+
+	public static function getAllPropertiesExcept()
+	{
+		$num_args		= func_num_args();
+		$indexes		= array();
+
+		if( func_num_args() > 0 )
+		{
+			$array			= func_get_arg( 0 );
+
+			if( is_array( $array ) )
+			{
+				$indexes = $array;
+			}
+			else
+			{
+				for($i=0;$i<$num_args;$i++)
+				{
+			 		$indexes[] = func_get_arg( $i );
+			 	}
+			}
+		}
+
+
+		$obj = new static();
+		$merged = array_merge( DBTable::$_control_variable_names, $indexes );
+		$properties = array();
+		foreach($obj as $i )
+		{
+			if( !in_array( $i, $merged ) )
+				$properties[] = $i;
+		}
+		return $i;
+	}
+
 	public static function getTotalRows($conn = NULL)
 	{
 		$mysqli		= empty( $conn ) ? self::$connection : $conn;
