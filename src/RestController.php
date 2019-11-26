@@ -40,7 +40,6 @@ class RestController
 		if( isset( $_SERVER['HTTP_ORIGIN'] ) )
 				header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
 
-		//header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept" />
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
 
@@ -90,19 +89,15 @@ class RestController
         }
         else if( method_exists( $this, $method) )
         {
-		    error_log("EXECUTING ".$method );
 			$this->{$method}();
-			error_log("METHOD RESPONSE".$this->response );
             if( !empty( $this->response  ) )
             {
-				error_log("ECHOING METHOD RESPONSE".$this->response );
             }
             echo $this->response;
 			return;
         }
 		else
 		{
-		    error_log("METHOD DOES NOT EXISTS".$method );
 			http_response_code(405);
 			$this->setAllowHeader();
 		}
@@ -126,7 +121,6 @@ class RestController
 		if( $_SERVER["CONTENT_TYPE"] == 'application/x-www-form-urlencoded' )
 		{
 			$info = file_get_contents("php://input");
-			error_log( $info );
 			parse_str( $info, $post_vars);
 			return $post_vars;
 		}
