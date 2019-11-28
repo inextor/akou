@@ -198,7 +198,6 @@ class DBTable
 			}
 		}
 
-
 		$obj = new static();
 		$merged = array_merge( DBTable::$_control_variable_names, $indexes );
 		$properties = array();
@@ -207,7 +206,7 @@ class DBTable
 			if( !in_array( $i, $merged ) )
 				$properties[] = $i;
 		}
-		return $i;
+		return $properties;
 	}
 
 	public static function getTotalRows($conn = NULL)
@@ -562,6 +561,15 @@ class DBTable
 		return $i;
 	}
 
+	public static function create($array, $connection = NULL )
+	{
+		$_obj = new static( $connection);
+		$_obj->assignFromArray( $array );
+		if( $_obj->insertDb() )
+			return $_obj;
+		return NULL;
+	}
+
 	public static function createFromArray($array, $connection=NULL)
 	{
 		$_obj = new static($connection);
@@ -570,6 +578,11 @@ class DBTable
 		return $_obj;
 	}
 
+	function insert()
+	{
+		$args = func_get_args();
+		return $this->insert( ...$args );
+	}
 
 	function insertDb( $ignore = FALSE )
 	{
@@ -733,6 +746,11 @@ class DBTable
 		return $sql_insert_string;
 	}
 
+	function delete()
+	{
+		$this->deleteDb();
+	}
+
 	function deleteDb()
 	{
 		$this->setWhereStringNonEmptyValues();
@@ -744,7 +762,13 @@ class DBTable
 
 	function deleteFromDb()
 	{
-		deleteDb();
+		$this->deleteDb();
+	}
+
+	function update()
+	{
+		$args = func_get_args();
+		return $this->updateDB( ...$args );
 	}
 
 	function updateDb()
@@ -1321,45 +1345,57 @@ class DBTable
 		return FALSE;
 	}
 
-	public  function search()
+	public static function get($id)
 	{
-		$cmp_a		= array();
-		$name_class = get_class( $this );
-
-
-		foreach ($this as $name => $value)
+		$obj = new static();
+		$obj->id = $id;
+		if( $obj->load( true ) )
 		{
-			if( in_array( $name , DBTable::$_control_variable_names) )
-				continue;
-
-			if( property_exists($name_class,$name) && isset($this->{$name}) )
-			{
-				if( $this->{$name} === 'NULL' )
-					$cmp_a[] = '`'.$name.'` IS NULL';
-				else
-					$cmp_a[] = '`'.$name.'` = "'.$this->_conn->real_escape_string( $value ).'"';
-			}
+			return $obj;
 		}
+		return NULL;
+	}
 
-		if( count( $cmp_a ) === 0 )
+	public static function searcFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	{
+		$properties		= static::getAllProperties();
+		$constraints	= [];
+
+		foreach( $searchKeys as $key=>$value )
 		{
-			return FALSE;
+			if( !in_array( $key, $properties ) )
+				return array();
+
+			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
 		}
+		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
+		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str. ' LIMIT 1' ;
 
-		$_sql	= 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.implode(' OR ',$cmp_a ).' LIMIT 1';
+		if( $for_update )
+			$_sql .= ' FOR UPDATE ';
 
-		$result = $this->_conn->query( $_sql );
+		return $as_objects ?  static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
+	}
 
-		if( $result && $data = $result->fetch_assoc( ) )
+	public static function search($searchKeys,$as_objects=TRUE, $for_update = false)
+	{
+		$properties		= static::getAllProperties();
+		$constraints	= [];
+
+		foreach( $searchKeys as $key=>$value )
 		{
-			$fields_info = static::getFieldsInfo($result);
-			$row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $row, $fields_info ) : $data;
-			$this->assignFromArray( $row );
-			$this->setWhereString();
-			return TRUE;
-		}
+			if( !in_array( $key, $properties ) )
+				return array();
 
-		return FALSE;
+			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+		}
+		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
+		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
+
+		if( $for_update )
+			$_sql .= ' FOR UPDATE ';
+
+		return $as_objects ?  static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 	}
 
 	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
