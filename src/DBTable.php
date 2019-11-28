@@ -201,9 +201,9 @@ class DBTable
 		$obj = new static();
 		$merged = array_merge( DBTable::$_control_variable_names, $indexes );
 		$properties = array();
-		foreach($obj as $i )
+		foreach($obj as $i=>$value )
 		{
-			if( !in_array( $i, $merged ) )
+			if( !in_array($i, $merged) )
 				$properties[] = $i;
 		}
 		return $properties;
