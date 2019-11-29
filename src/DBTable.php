@@ -1345,18 +1345,18 @@ class DBTable
 		return FALSE;
 	}
 
-	public static function get($id)
+	public static function get($id, $for_update = FALSE)
 	{
 		$obj = new static();
 		$obj->id = $id;
-		if( $obj->load( true ) )
+		if( $obj->load( true, $for_update ) )
 		{
 			return $obj;
 		}
 		return NULL;
 	}
 
-	public static function searcFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1374,7 +1374,7 @@ class DBTable
 		if( $for_update )
 			$_sql .= ' FOR UPDATE ';
 
-		return $as_objects ?  static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
+		return $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 	}
 
 	public static function search($searchKeys,$as_objects=TRUE, $for_update = false)
