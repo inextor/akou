@@ -1374,7 +1374,10 @@ class DBTable
 		if( $for_update )
 			$_sql .= ' FOR UPDATE ';
 
-		return $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
+		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
+		if( count( $info ) )
+			return $info[0];
+		return NULL;
 	}
 
 	public static function search($searchKeys,$as_objects=TRUE, $for_update = false)

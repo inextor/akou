@@ -8,6 +8,7 @@ class LoggableException extends \Exception
 	public $function;
 	public $tecnical_message;
 	public $date;
+	public $code;
 
 	public function toArray()
 	{
@@ -31,6 +32,7 @@ class LoggableException extends \Exception
 		$this->function			= '';
 		$this->tecnical_message	= $tecnical_message;
 		$this->date				= date('Y-m-d H:i:s');
+		$this->code				= $code;
 		$bt						= debug_backtrace();
 
 
