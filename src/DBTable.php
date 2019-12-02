@@ -286,13 +286,13 @@ class DBTable
 		return $field_info;
 	}
 
-    static function getRowWithDataTypes($row,$fields_info )
+	static function getRowWithDataTypes($row,$fields_info )
 	{
 		$result = array();
 		foreach($fields_info as $name=>$type)
 		{
 			//error_log( $name );
-		    if( $row[ $name ] === null )
+			if( $row[ $name ] === null )
 			{
 				$result[ $name ]= null;
 			}
@@ -345,7 +345,7 @@ class DBTable
 
 		while( $data = $resSql->fetch_assoc() )
 		{
-		    $row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $data, $types_info ) : $data;
+			$row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $data, $types_info ) : $data;
 
 			if( $asArray )
 			{
@@ -387,8 +387,8 @@ class DBTable
 
 		if( $result && $data = $result->fetch_assoc( ))
 		{
-		    $types_info = DBTable::$_parse_data_types ? self::getFieldsInfo( $result ) : NULL;
-		    $row = DBTable::$_parse_data_types ? self::getRowWithDataTypes( $data, $types_info ) : $data;
+			$types_info = DBTable::$_parse_data_types ? self::getFieldsInfo( $result ) : NULL;
+			$row = DBTable::$_parse_data_types ? self::getRowWithDataTypes( $data, $types_info ) : $data;
 
 			$_obj = new static( $connection );
 			$_obj->assignFromArray( $row );
@@ -581,7 +581,7 @@ class DBTable
 	function insert()
 	{
 		$args = func_get_args();
-		return $this->insert( ...$args );
+		return $this->insertDb( ...$args );
 	}
 
 	function insertDb( $ignore = FALSE )
@@ -599,7 +599,6 @@ class DBTable
 
 		if( $this->_conn->error )
 		{
-
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
 
 			if( strpos( $this->_conn->error,'column') !== FALSE )
@@ -913,19 +912,19 @@ class DBTable
 		return $_array;
 	}
 
-    public static function getAttributes()
-    {
-        $class_name = get_called_class();
-        $vars       = get_class_vars( $class_name );
+	public static function getAttributes()
+	{
+		$class_name = get_called_class();
+		$vars	   = get_class_vars( $class_name );
 
-        foreach( DBTable::$_control_variable_names as $value)
-        {
-            if( isset( $vars[ $value ] ) )
-                unset( $vars[ $value ] );
-        }
+		foreach( DBTable::$_control_variable_names as $value)
+		{
+			if( isset( $vars[ $value ] ) )
+				unset( $vars[ $value ] );
+		}
 
-        return $vars;
-    }
+		return $vars;
+	}
 
 	function toArray()
 	{
