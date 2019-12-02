@@ -6,18 +6,16 @@ class RestController
 {
 	function __construct()
 	{
-        $this->response = "";
+		$this->response = "";
 		$this->allow_credentials = true;
 		$this->cors = false;
 	}
 
-    function defaultOptions()
-    {
-       $this->setAllowHeader();
-    }
+	function defaultOptions()
+	{
+		$this->setAllowHeader();
+	}
 
-
-	//function getPaginationInfo($params,$page_size_param="page_size",$page_param="page",$max_page_size=50)
 	function getPaginationInfo($page,$page_size,$default_page_size=50)
 	{
 		$obj = new \stdClass();
@@ -43,15 +41,15 @@ class RestController
 		$all_methods = ['POST','GET','PUT','OPTIONS','HEADER','PATCH','DELETE'];
 		$methods = Array();
 
-        foreach($all_methods as $method )
-        {
-            if( method_exists( $this, \strtolower( $method ) ) )
-                $methods[] = $method;
-        }
+		foreach($all_methods as $method )
+		{
+			if( method_exists( $this, \strtolower( $method ) ) )
+				$methods[] = $method;
+		}
 
 		if(isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
-            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-        //header("Access-Control-Allow-Headers: *");
+			header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+
 		header("Access-Control-Allow-Methods: ".join(", ",$methods));
 		//header('Allow: '.join($methods,","));
 	}
@@ -60,7 +58,6 @@ class RestController
 	{
 		if( $this->cors )
 		{
-        //	header('Access-Control-Allow-Origin: *');
 		}
 
 		if( $this->allow_credentials )
@@ -71,31 +68,31 @@ class RestController
 
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
 
-        if( $method === "get" || $method === "head" )
-        {
-            if( !method_exists( $this, $method) )
-            {
-                $this->sendStatus(404)->text('Document not found');
-            }
-            else
-            {
-                $this->get();
-            }
+		if( $method === "get" || $method === "head" )
+		{
+			if( !method_exists( $this, $method) )
+			{
+				$this->sendStatus(404)->text('Document not found');
+			}
+			else
+			{
+				$this->get();
+			}
 
-            if( $method !== "head" )
-            {
-                echo $this->response;
-            }
-        }
-        else if( method_exists( $this, $method) )
-        {
+			if( $method !== "head" )
+			{
+				echo $this->response;
+			}
+		}
+		else if( method_exists( $this, $method) )
+		{
 			$this->{$method}();
-            if( !empty( $this->response  ) )
-            {
-            }
-            echo $this->response;
+			if( !empty( $this->response  ) )
+			{
+			}
+			echo $this->response;
 			return;
-        }
+		}
 		else
 		{
 			http_response_code(405);
@@ -103,18 +100,25 @@ class RestController
 		}
 	}
 
-    function text($text)
-    {
-        header('Content-Type: text/plain');
-        $this->response = $text;
-        header('Content-length: '.strlen( $this->response ) );
-        return $text;
-    }
+	function raw($str)
+	{
+		$this->response = $str;
+		header('Content-length: '.strlen( $this->response ) );
+		return $str;
+	}
+
+	function text($text)
+	{
+		header('Content-Type: text/plain');
+		$this->response = $text;
+		header('Content-length: '.strlen( $this->response ) );
+		return $text;
+	}
 
 
 	function getMethodParams()
 	{
-        if( empty( $_SERVER["CONTENT_TYPE"] ) )
+		if( empty( $_SERVER["CONTENT_TYPE"] ) )
 		{
 			error_log("LOOKING FOR CONTENT_TYPE".json_encode(array_keys( $_SERVER )) );
 		}
@@ -144,16 +148,16 @@ class RestController
 		return $this;
 	}
 
-    function json($result,$flag=null)
-    {
-       // error_log( "JSON()".print_r( $result,true) );
+	function json($result,$flag=null)
+	{
+		// error_log( "JSON()".print_r( $result,true) );
 		$this->response = empty( $flag ) ?  json_encode( $result ) : json_encode( $result, $flag );
 		//error_log("THIS RESPONSE".$this->response );
-        //error_log('Hader Content-length: '.strlen( $this->response ));
-        header('Content-length: '.strlen( $this->response ) );
-        //error_log('Header Content-Type: application/json');
-        header("Content-type: application/json; charset=utf-8");
-        //header('Content-Type: application/json');
-        return $result;
-    }
+		//error_log('Hader Content-length: '.strlen( $this->response ));
+		header('Content-length: '.strlen( $this->response ) );
+		//error_log('Header Content-Type: application/json');
+		header("Content-type: application/json; charset=utf-8");
+		//header('Content-Type: application/json');
+		return $result;
+	}
 }
