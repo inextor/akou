@@ -19,19 +19,16 @@ class ArrayUtils
 
 	static function getProperty($x,$prop)
 	{
-
 		if( is_object( $x ) )
 		{
-
-		   if( isset( $x->{ $prop } ) )
+			if( isset( $x->{ $prop } ) )
 				return $x->{ $prop };
-		   return null;
+			return null;
 		}
 		if( isset( $x[ $prop ]) )
 		{
 			return $x[ $prop ];
 		}
-
 		return NULL;
 	}
 
@@ -40,7 +37,7 @@ class ArrayUtils
 		$result = array();
 		foreach($array as $item)
 		{
-		    if( is_object( $item ) )
+			if( is_object( $item ) )
 			{
 				if( !empty( $item->{ $property } ) )
 						$result[] = $item->{ $property };
@@ -55,10 +52,9 @@ class ArrayUtils
 	static function itemsPropertiesToArrays()
 	{
 		$num_args		= func_num_args();
-		$array		= func_get_arg( 0 );
+		$array			= func_get_arg( 0 );
 		$indexes		= array();
 		$resultIndex	= array();
-
 
 		if( is_array( func_get_arg( 1 ) ) )
 		{
@@ -68,12 +64,9 @@ class ArrayUtils
 		{
 			for($i=1;$i<$num_args;$i++)
 			{
-		 		$indexes[] = func_get_arg( $i );
-		 	}
+				$indexes[] = func_get_arg( $i );
+			}
 		}
-
-		//print_r( $array );
-		//print_r( $indexes );
 
 		foreach( $indexes as $index )
 		{
