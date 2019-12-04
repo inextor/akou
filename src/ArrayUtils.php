@@ -32,6 +32,11 @@ class ArrayUtils
 		return NULL;
 	}
 
+	static function getItemsProperty($array,$property)
+	{
+		return static::itemsPropertyToArray( $array, $property );
+	}
+
 	static function itemsPropertyToArray($array,$property)
 	{
 		$result = array();
