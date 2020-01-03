@@ -1389,7 +1389,14 @@ class DBTable
 			if( !in_array( $key, $properties ) )
 				return array();
 
-			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+			if( is_array( $value ) )
+			{
+				$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+			}
+			else
+			{
+				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+			}
 		}
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
