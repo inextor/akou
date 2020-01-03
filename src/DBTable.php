@@ -323,10 +323,10 @@ class DBTable
 	}
 
 	/*
-	 * $dictionaryIndex the index dictionary example dictionary by id
+	 * $dictionary_index the index dictionary example dictionary by id
 	 * if false return a simple array
 	*/
-	static function getArrayFromQuery( $sql, $dictionaryIndex = FALSE, $connection = NULL)
+	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
 	{
 		$className 	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -349,10 +349,10 @@ class DBTable
 
 			if( $asArray )
 			{
-				if( $dictionaryIndex )
+				if( $dictionary_index )
 				{
-					if( !empty( $row[ $dictionaryIndex ] ) )
-						$result[ $row[ $dictionaryIndex ] ] =  $row;
+					if( !empty( $row[ $dictionary_index ] ) )
+						$result[ $row[ $dictionary_index ] ] =  $row;
 				}
 				else
 				{
@@ -364,9 +364,9 @@ class DBTable
 
 				$_obj = static::createFromArray( $row );
 
-				if( $dictionaryIndex && !empty( $_obj->{ $dictionaryIndex } ) )
+				if( $dictionary_index && !empty( $_obj->{ $dictionary_index } ) )
 				{
-					$result[ $_obj->{$dictionaryIndex} ] = $_obj;
+					$result[ $_obj->{$dictionary_index} ] = $_obj;
 				}
 				else
 					$result[] = $_obj;
@@ -1355,7 +1355,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false, $dictionary_index = FALSE )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1379,7 +1379,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $for_update = false)
+	public static function search($searchKeys,$as_objects=TRUE, $for_update = FALSE, $dictionary_index =FALSE )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1404,7 +1404,7 @@ class DBTable
 		if( $for_update )
 			$_sql .= ' FOR UPDATE ';
 
-		return $as_objects ?  static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
+		return $as_objects ?  static::getArrayFromQuery( $sql, $dictionary_index ) : DBTable::getArrayFromQuery( $sql, $dicitionary_index );
 	}
 
 	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
