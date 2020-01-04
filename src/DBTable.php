@@ -1379,7 +1379,40 @@ class DBTable
 		return NULL;
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $for_update = FALSE, $dictionary_index =FALSE )
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	{
+		$properties		= static::getAllProperties();
+		$constraints	= [];
+
+		foreach( $searchKeys as $key=>$value )
+		{
+			if( !in_array( $key, $properties ) )
+				return array();
+
+			if( is_array( $value ) )
+			{
+				if( count( $value ) )
+				{
+					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				}
+			}
+			else
+			{
+				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+			}
+		}
+		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
+		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
+
+		if( $for_update )
+			$_sql .= ' FOR UPDATE ';
+
+		return $as_objects
+			? static::getArrayFromQuery( $sql, $dictionary_index )
+			: DBTable::getArrayFromQuery( $sql, $dicitionary_index );
+	}
+
+	public static function searchGroupByIndex($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1404,7 +1437,9 @@ class DBTable
 		if( $for_update )
 			$_sql .= ' FOR UPDATE ';
 
-		return $as_objects ?  static::getArrayFromQuery( $sql, $dictionary_index ) : DBTable::getArrayFromQuery( $sql, $dicitionary_index );
+		return $as_objects
+			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
+			: DBTable::getArrayFromQueryGroupByIndex( $sql, $dicitionary_index );
 	}
 
 	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
