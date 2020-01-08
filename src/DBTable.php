@@ -1409,7 +1409,7 @@ class DBTable
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
-			: DBTable::getArrayFromQuery( $sql, $dicitionary_index );
+			: DBTable::getArrayFromQuery( $sql, $dictionary_index );
 	}
 
 	public static function searchGroupByIndex($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
@@ -1439,7 +1439,7 @@ class DBTable
 
 		return $as_objects
 			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
-			: DBTable::getArrayFromQueryGroupByIndex( $sql, $dicitionary_index );
+			: DBTable::getArrayFromQueryGroupByIndex( $sql, $dictionary_index );
 	}
 
 	public function unsetEmptyValues( $flag = DBTable::UNSET_ALL_BUT_ZEROS )
