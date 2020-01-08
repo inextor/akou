@@ -2,28 +2,32 @@
 
 namespace AKOU;
 
-class Curl
+class Image
 {
-	function formImageSaveToPath($obj_FILE,$dirname, $max_height=1200,$max_width=1350, $max_weight=5242880,$min_width=50,$min_height)
+    function getImageInfo()
+	{
+		$info = array();
+	}
+
+	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=1200,$max_width=1350, $max_weight=55242880,$min_width=50,$min_height)
 	{
 		global $mysqli;
 
 		$min_weight = 0;
-		$return_var = new json_res();
 
 		$image_type = $obj_FILE['type'];
 		$image_size = $obj_FILE['size'];
 
 		if( $obj_FILE['error'] == 1 )
 		{
-			throw new StoreException('Ocurrió un error de red al subir la imagen, posiblemente el tamaño de la imagen es mayor a 5 Mb');
+			throw new SystemException('Ocurrió un error de red al subir la imagen, posiblemente el tamaño de la imagen es mayor a 5 Mb');
 			return false;
 		}
 
 
 		if( !strstr( $image_type , 'image' ) )
 		{
-			throw new StoreException('Not an image');
+			throw new SystemException('Not an image');
 		}
 
 		if
@@ -39,7 +43,7 @@ class Curl
 			$image_obj		  = FALSE;
 
 			$content_types	  = array( IMAGETYPE_GIF => 'image/gif', IMAGETYPE_JPEG=>'image/jpeg', IMAGETYPE_PNG=>'image/png' );
-			$exif_type		  = exif_imagetype( $obj_FILE['tmp_name'] );
+			$exif_type		  = \exif_imagetype( $obj_FILE['tmp_name'] );
 
 			if( isset( $content_types[ $exif_type] ) )
 			{
@@ -55,38 +59,38 @@ class Curl
 				case 'image/jpg':
 					$file_ext = 'jpg';
 					$image_type_defined = IMAGETYPE_JPEG;
-					$image_obj		  = imagecreatefromjpeg( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefromjpeg( $obj_FILE['tmp_name'] );
 					break;
 				case 'image/jpeg':
 					$file_ext = 'jpg';
 					$image_type_defined = IMAGETYPE_JPEG;
-					$image_obj		  = imagecreatefromjpeg( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefromjpeg( $obj_FILE['tmp_name'] );
 					break;
 				case 'image/gif':
 					$file_ext = 'gif';
 					$image_type_defined = IMAGETYPE_GIF;
-					$image_obj		  = imagecreatefromgif( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefromgif( $obj_FILE['tmp_name'] );
 					break;
 				case 'image/png':
 					$file_ext = 'png';
 					$image_type_defined = IMAGETYPE_PNG;
-					$image_obj		  = imagecreatefrompng( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefrompng( $obj_FILE['tmp_name'] );
 					break;
 				case 'image/bmp':
 					$file_ext = 'bmp';
 					$image_type_defined = IMAGETYPE_BMP;
-					$image_obj		  = imagecreatefromwbmp( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefromwbmp( $obj_FILE['tmp_name'] );
 					break;
 				default:
 					$file_ext = 'jpg';
 					$image_type_defined = IMAGETYPE_JPEG;
-					$image_obj		  = imagecreatefromjpeg( $obj_FILE['tmp_name'] );
+					$image_obj		  = \imagecreatefromjpeg( $obj_FILE['tmp_name'] );
 					break;
 			}
 
 			if( !$image_obj )
 			{
-				throw new StoreException
+				throw new SystemException
 				(
 					'not a supported image type(jpeg,png)','current image type is'.$image_type
 				);
@@ -94,13 +98,14 @@ class Curl
 
 			$file_name		  = $uniq_id . '.' . $file_ext;
 			$image_content	  = file_get_contents( $obj_FILE['tmp_name'] );
+			$original_filename = $obj_FILE['name'];
 
 			$image_width	= imagesx( $image_obj );
 			$image_height   = imagesy( $image_obj );
 
-			if($has_limits  && ($image_width < $min_width || $image_height < $min_height ))
+			if(($image_width < $min_width || $image_height < $min_height ))
 			{
-				throw new StoreException
+				throw new SystemException
 				(
 					'to small image dimensions' . $min_width . 'x' . $min_height
 					,"imagen_widht $image_width height is $image_height minwidht $min_width min_height $min_height $image_type $image_type_defined".print_r($image_obj,true)
@@ -116,13 +121,14 @@ class Curl
 				$image_content  = $this->imageByContentType( $image_obj, $image_type );
 			}
 
-			if( $this->saveImageToFile( $file_name, $image_content, $image_type, $dirname ) )
+			if( $this->saveImageToFile( $file_name, $image_content, $image_type, $to_save_dirname) )
 			{
 				return Array(
 					"filename" => $file_name
-					,"filenamepath" => $dirname."/".$filename
-					,"image_type" => $image_type
-					,"file_size" => strlen( $image_content )
+					,"original_filename"=>$original_filename
+					,"filenamepath" => $to_save_dirname."/".$file_name
+					,"content_type" => $image_type
+					,"size" => strlen( $image_content )
 					,"width" => $image_width
 					,"height" => $image_height
 				);
@@ -137,14 +143,14 @@ class Curl
 		}
 		elseif ( $image_size >= $max_weight )
 		{
-			$message	= 'Imagen demasiado grande (Mayor de 5 mbs)...';
+			$message	= 'Imagen demasiado grande (Mayor de 5 mbs)...'.$image_size.' '.$max_weight;
 		}
 		else
 		{
 			$message	= 'Ocurrio un error desconocido';
 		}
 
-		throw new StoreException
+		throw new SystemException
 		(
 			$message,
 			print_r
@@ -169,7 +175,7 @@ class Curl
 		{
 			if( !mkdir( $dirname ))
 			{
-				throw new StoreException
+				throw new SystemException
 				(
 					'unable to create path '.$dirname
 					,'path to create '.$dirname
