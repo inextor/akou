@@ -3,6 +3,7 @@ namespace AKOU;
 
 class ArrayUtils
 {
+
 	static function groupByProperty($array,$prop)
 	{
 		$result = array();
@@ -21,9 +22,9 @@ class ArrayUtils
 	{
 		if( is_object( $x ) )
 		{
-		   if( isset( $x->{ $prop } ) )
+			if( isset( $x->{ $prop } ) )
 				return $x->{ $prop };
-		   return null;
+			return null;
 		}
 		if( isset( $x[ $prop ]) )
 		{
@@ -53,10 +54,18 @@ class ArrayUtils
 		}
 		return $result;
 	}
+
+	static function getItemsProperties()
+	{
+
+		$args= func_get_args();
+		return static::itemsPropertiesToArrays( ...$args);
+	}
+
 	static function itemsPropertiesToArrays()
 	{
 		$num_args		= func_num_args();
-		$array		= func_get_arg( 0 );
+		$array			= func_get_arg( 0 );
 		$indexes		= array();
 		$resultIndex	= array();
 
@@ -68,8 +77,8 @@ class ArrayUtils
 		{
 			for($i=1;$i<$num_args;$i++)
 			{
-		 		$indexes[] = func_get_arg( $i );
-		 	}
+				$indexes[] = func_get_arg( $i );
+			}
 		}
 
 		foreach( $indexes as $index )
@@ -95,5 +104,35 @@ class ArrayUtils
 			$result[ $index ] = array_keys( $resultIndex[ $index ] );
 		}
 		return $result;
+	}
+
+	static function toAssociative( $array, $prop )
+	{
+		$result = array();
+		foreach( $array as $item )
+		{
+			$key = is_object( $item ) ? $item->{$prop } : $item[ $prop ];
+			if( isset( $result[ $key ] ) )
+				$result[ $key ][] = $item;
+			else
+				$result[ $key ] = array( $item );
+
+		}
+		return $result();
+	}
+
+	static function filterByValue( $array, $index, $value )
+	{
+		if(is_array($array) && count($array)>0)
+		{
+			foreach(array_keys($array) as $key){
+				$temp[$key] = $array[$key][$index];
+
+				if ($temp[$key] == $value){
+					$newarray[$key] = $array[$key];
+				}
+			}
+		}
+		return $newarray;
 	}
 }
