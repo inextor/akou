@@ -32,12 +32,16 @@ class ArrayUtils
 		return NULL;
 	}
 
+	static function getItemsProperty($array,$property)
+	{
+		return static::itemsPropertyToArray( $array, $property );
+	}
 	static function itemsPropertyToArray($array,$property)
 	{
 		$result = array();
 		foreach($array as $item)
 		{
-		    if( is_object( $item ) )
+			if( is_object( $item ) )
 			{
 				if( !empty( $item->{ $property } ) )
 						$result[] = $item->{ $property };
