@@ -26,19 +26,19 @@ class DBTable
 	const TRIM_ON_SAVE			= 1;
 	const INT_VALUE				= 2;	// ✓
 	const STRING_VALUE			= 5;	// ✓
-	const EMAIL_VALUE			= 9; 	//8 + 1 TRIM_ON_SAVE ✓
-	const DOMAIN_VALUE			= 17; 	//16 + 1 TRIM_ON_SAVE ✓
-	const URL_VALUE				= 33; 	//32 + 1 TRIM_ON_SAVE ✗	//Not implemented YET
-	const TIMESTAMP_VALUE		= 64; 	// ✓
-	const PHONE_VALUE			= 129; 	//128 + 1 TRIM_ON_SAVE ✓
-	const ENUM_VALUE			= 256; 	// ✓
-	const FLOAT_VALUE			= 512; 	// ✓
+	const EMAIL_VALUE			= 9;	//8 + 1 TRIM_ON_SAVE ✓
+	const DOMAIN_VALUE			= 17;	//16 + 1 TRIM_ON_SAVE ✓
+	const URL_VALUE				= 33;	//32 + 1 TRIM_ON_SAVE ✗	//Not implemented YET
+	const TIMESTAMP_VALUE		= 64;	// ✓
+	const PHONE_VALUE			= 129;	//128 + 1 TRIM_ON_SAVE ✓
+	const ENUM_VALUE			= 256;	// ✓
+	const FLOAT_VALUE			= 512;	// ✓
 	const IGNORE_ON_INSERT		= 1024; //
 	const IGNORE_ON_UPDATE		= 2048;
 	const REQUIRED_ON_INSERT	= 4096;
 	const REQUIRED_ON_UPDATE	= 8192;
 
-	const CREDIT_CARD_VALUE	 	= 16384;
+	const CREDIT_CARD_VALUE		= 16384;
 	const DIGITS_VALUE			= 32768; //ONLY DIGITS STRINGS like for example '00012'; OR
 	const TIMESTAMP_ON_CREATE	= 65536; //✓
 	const DONT_EXPORT_EXTERNAL	= 131072;
@@ -193,8 +193,8 @@ class DBTable
 			{
 				for($i=0;$i<$num_args;$i++)
 				{
-			 		$indexes[] = func_get_arg( $i );
-			 	}
+					$indexes[] = func_get_arg( $i );
+				}
 			}
 		}
 
@@ -244,11 +244,11 @@ class DBTable
 
 	public static function getArrayFromQueryGroupByIndex($query,$index)
 	{
-		$className 	= static::getBaseClassName();
+		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
 
-		$conn 	= $connection ?: self::$connection;
-		$resSql = $conn->query( $query );
+		$conn	= $connection ?: self::$connection;
+		$resSql	= $conn->query( $query );
 
 		if( !$resSql )
 		{
@@ -286,13 +286,13 @@ class DBTable
 		return $field_info;
 	}
 
-    static function getRowWithDataTypes($row,$fields_info )
+	static function getRowWithDataTypes($row,$fields_info )
 	{
 		$result = array();
 		foreach($fields_info as $name=>$type)
 		{
 			//error_log( $name );
-		    if( $row[ $name ] === null )
+			if( $row[ $name ] === null )
 			{
 				$result[ $name ]= null;
 			}
@@ -328,10 +328,10 @@ class DBTable
 	*/
 	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
 	{
-		$className 	= static::getBaseClassName();
+		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
 
-		$conn 	= $connection ?: self::$connection;
+		$conn	= $connection ?: self::$connection;
 		$resSql = $conn->query( $sql );
 
 		if( !$resSql )
@@ -345,7 +345,7 @@ class DBTable
 
 		while( $data = $resSql->fetch_assoc() )
 		{
-		    $row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $data, $types_info ) : $data;
+			$row = DBTable::$_parse_data_types ? DBTable::getRowWithDataTypes( $data, $types_info ) : $data;
 
 			if( $asArray )
 			{
@@ -387,8 +387,8 @@ class DBTable
 
 		if( $result && $data = $result->fetch_assoc( ))
 		{
-		    $types_info = DBTable::$_parse_data_types ? self::getFieldsInfo( $result ) : NULL;
-		    $row = DBTable::$_parse_data_types ? self::getRowWithDataTypes( $data, $types_info ) : $data;
+			$types_info = DBTable::$_parse_data_types ? self::getFieldsInfo( $result ) : NULL;
+			$row = DBTable::$_parse_data_types ? self::getRowWithDataTypes( $data, $types_info ) : $data;
 
 			$_obj = new static( $connection );
 			$_obj->assignFromArray( $row );
@@ -420,7 +420,7 @@ class DBTable
 
 			if(isset($array[$_clas_name.'__'.$c]))
 			{
-					$this->{$name} =	$array[ $_clas_name.'__'.$c ];
+				$this->{$name} =	$array[ $_clas_name.'__'.$c ];
 			}
 			$c++;
 		}
@@ -526,8 +526,8 @@ class DBTable
 			{
 				for($i=1;$i<$num_args;$i++)
 				{
-			 		$indexes[] = func_get_arg( $i );
-			 	}
+					$indexes[] = func_get_arg( $i );
+				}
 			}
 		}
 
@@ -605,7 +605,7 @@ class DBTable
 			{
 				error_log( $this->_conn->error );
 				$firstIndex	= strpos( $this->_conn->error,'\'')+1;
-				$lastIndex 	= strrpos( $this->_conn->error,'\'');
+				$lastIndex	= strrpos( $this->_conn->error,'\'');
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
 				error_log('Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
 			}
@@ -622,7 +622,7 @@ class DBTable
 	{
 		$array_fields	= array();
 		$array_values	= array();
-		$class_name	 	= get_class($this);
+		$class_name		= get_class($this);
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
 		foreach ($this as $name => $value)
@@ -634,7 +634,7 @@ class DBTable
 					continue;
 				}
 
-				$attr_flags		 	= 0;
+				$attr_flags			= 0;
 				$validation_value	= array();
 
 				if( !empty( $arrayFlags[ $name ] ) )
@@ -912,19 +912,19 @@ class DBTable
 		return $_array;
 	}
 
-    public static function getAttributes()
-    {
-        $class_name = get_called_class();
-        $vars       = get_class_vars( $class_name );
+	public static function getAttributes()
+	{
+		$class_name	= get_called_class();
+		$vars		= get_class_vars( $class_name );
 
-        foreach( DBTable::$_control_variable_names as $value)
-        {
-            if( isset( $vars[ $value ] ) )
-                unset( $vars[ $value ] );
-        }
+		foreach( DBTable::$_control_variable_names as $value)
+		{
+			if( isset( $vars[ $value ] ) )
+				unset( $vars[ $value ] );
+		}
 
-        return $vars;
-    }
+		return $vars;
+	}
 
 	function toArray()
 	{
@@ -959,7 +959,7 @@ class DBTable
 
 			if( !empty( $arrayFlags ) && isset( $arrayFlags[ $name ] ) )
 			{
-				$flags = $arrayFlags[ $name ];
+				$flags	= $arrayFlags[ $name ];
 
 				if( is_array( $arrayFlags[ $name ] ) )
 					$flags	= $arrayFlags[$name]['flags']?:0;
@@ -986,8 +986,8 @@ class DBTable
 			if( $for_update )
 				$_sql .= ' FOR UPDATE ';
 
-			$this->_lastQuery = $_sql;
-			$result = $this->_conn->query( $_sql );
+			$this->_lastQuery	= $_sql;
+			$result				= $this->_conn->query( $_sql );
 
 			if( $result && $row = $result->fetch_assoc( ) )
 			{
@@ -1018,9 +1018,9 @@ class DBTable
 
 	function assignFromArrayExcluding()
 	{
-		$num_args		= func_num_args();
-		$indexes		= array();
-		$array			= func_get_arg( 0 );
+		$num_args	= func_num_args();
+		$indexes	= array();
+		$array		= func_get_arg( 0 );
 
 		if( empty($num_args) || !is_array( $array ) )
 			return FALSE;
@@ -1035,8 +1035,8 @@ class DBTable
 			{
 				for($i=1;$i<$num_args;$i++)
 				{
-			 		$indexes[] = func_get_arg( $i );
-			 	}
+					$indexes[] = func_get_arg( $i );
+				}
 			}
 		}
 
@@ -1330,7 +1330,7 @@ class DBTable
 			while ($field = $meta->fetch_field())
 			{
 				if( $addHeader )
-					$row_header[] 		= $field->name;
+					$row_header[]		= $field->name;
 
 				$row	[] = '';
 				$params	[] = &$row[ $i ];
@@ -1447,7 +1447,7 @@ class DBTable
 		$obj			= $this;
 
 		$unsetZeros		= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
-		$unsetNulls 	= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
+		$unsetNulls		= ( $flag & DBTable::UNSET_ZEROS ) !== 0;
 		$unsetBlanks	= ( $flag & DBTable::UNSET_BLANKS ) !== 0;
 		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
 		$unsetInvalidDates = ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0 ;
