@@ -62,8 +62,16 @@ class RestController
 
 		if( $this->allow_credentials )
 		{
-			header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-			header('Access-Control-Allow-Credentials: true');
+			if( isset( $_SERVER['HTTP_ORIGIN'] ) )
+			{
+				header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+				header('Access-Control-Allow-Credentials: true');
+			}
+			else
+			{
+				header("Access-Control-Allow-Origin: *");
+				header('Access-Control-Allow-Credentials: true');
+			}
 		}
 
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
