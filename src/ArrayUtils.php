@@ -37,8 +37,6 @@ class ArrayUtils
 	{
 		return static::itemsPropertyToArray( $array, $property );
 	}
-
-
 	static function itemsPropertyToArray($array,$property)
 	{
 		$result = array();
@@ -135,6 +133,6 @@ class ArrayUtils
 				}
 			}
 		}
-      	return $newarray;
+		return $newarray;
 	}
 }
