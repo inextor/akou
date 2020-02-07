@@ -1405,7 +1405,7 @@ class DBTable
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
 		if( $for_update )
-			$_sql .= ' FOR UPDATE ';
+			$sql .= ' FOR UPDATE ';
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
@@ -1422,9 +1422,13 @@ class DBTable
 			if( !in_array( $key, $properties ) )
 				return array();
 
+
 			if( is_array( $value ) )
 			{
-				$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				if( count( $value ) )
+				{
+					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				}
 			}
 			else
 			{
@@ -1434,8 +1438,11 @@ class DBTable
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
+
 		if( $for_update )
-			$_sql .= ' FOR UPDATE ';
+			$sql .= ' FOR UPDATE ';
+
+		//error_log( $sql );
 
 		return $as_objects
 			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
