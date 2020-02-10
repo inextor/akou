@@ -282,7 +282,6 @@ class DBTable
 		{
 			$field_info[ $val->name ] = $val->type;
 		}
-		//error_log( json_encode( $field_info ) );
 		return $field_info;
 	}
 
@@ -291,7 +290,6 @@ class DBTable
 		$result = array();
 		foreach($fields_info as $name=>$type)
 		{
-			//error_log( $name );
 			if( $row[ $name ] === null )
 			{
 				$result[ $name ]= null;
@@ -1355,7 +1353,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false, $dictionary_index = FALSE )
+	public static function getSearchFirstSql($searchKeys, $for_update = false )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1363,7 +1361,7 @@ class DBTable
 		foreach( $searchKeys as $key=>$value )
 		{
 			if( !in_array( $key, $properties ) )
-				return array();
+				continue;
 
 			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
 		}
@@ -1371,7 +1369,14 @@ class DBTable
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str. ' LIMIT 1' ;
 
 		if( $for_update )
-			$_sql .= ' FOR UPDATE ';
+			$sql .= ' FOR UPDATE ';
+
+		return $sql;
+	}
+
+	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	{
+		$sql	= static::getSearchFirstSql($searchKeys, $for_update );
 
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
@@ -1379,7 +1384,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	public static function getSearchSql( $searchKeys, $for_update = FALSE )
 	{
 		$properties		= static::getAllProperties();
 		$constraints	= [];
@@ -1387,7 +1392,7 @@ class DBTable
 		foreach( $searchKeys as $key=>$value )
 		{
 			if( !in_array( $key, $properties ) )
-				return array();
+				continue;
 
 			if( is_array( $value ) )
 			{
@@ -1405,7 +1410,14 @@ class DBTable
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
 		if( $for_update )
-			$_sql .= ' FOR UPDATE ';
+			$sql .= ' FOR UPDATE ';
+
+		return $sql;
+	}
+
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	{
+		$sql = static::getSearchSql($searchKeys, $for_update);
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
