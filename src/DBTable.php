@@ -242,7 +242,7 @@ class DBTable
 			self::$_attrFlags = $array;
 	}
 
-	public static function getArrayFromQueryGroupByIndex($query,$index)
+	public static function getArrayFromQueryGroupByIndex($query,$index,$connection=NULL)
 	{
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -1436,7 +1436,10 @@ class DBTable
 
 			if( is_array( $value ) )
 			{
-				$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				if( count( $value ) )
+				{
+					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				}	
 			}
 			else
 			{
@@ -1447,7 +1450,7 @@ class DBTable
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
 		if( $for_update )
-			$_sql .= ' FOR UPDATE ';
+			$sql .= ' FOR UPDATE ';
 
 		return $as_objects
 			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
