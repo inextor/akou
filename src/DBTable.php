@@ -242,7 +242,7 @@ class DBTable
 			self::$_attrFlags = $array;
 	}
 
-	public static function getArrayFromQueryGroupByIndex($query,$index)
+	public static function getArrayFromQueryGroupByIndex($query,$index,$connection=NULL)
 	{
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
