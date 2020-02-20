@@ -139,6 +139,24 @@ class ValidationException extends LoggableException
 	}
 }
 
+class ForbidenException extends LoggableException
+{
+	public function __construct( $message, $tecnical_message = '', $code = 403 , Exception $previous = null)
+	{
+		parent::__construct($message, $tecnical_message, $code, $previous);
+	}
+
+	protected function addLog( $message )
+	{
+		Utils::addLog
+		(
+			Utils::LOG_LEVEL_WARN
+			,'LOG_WARN'
+			,$message
+		);
+	}
+}
+
 class NotFoundException extends LoggableException
 {
 	public function __construct( $message, $tecnical_message = '', $code = 404 , Exception $previous = null)
