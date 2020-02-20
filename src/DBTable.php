@@ -745,7 +745,7 @@ class DBTable
 
 	function delete()
 	{
-		$this->deleteDb();
+		return $this->deleteDb();
 	}
 
 	function deleteDb()
