@@ -9,7 +9,7 @@ class ArrayUtils
 		$result = array();
 		foreach( $array as $item )
 		{
-			$key = is_object( $item ) ? $item->{$prop } : $item[ $prop ];
+			$key = static::getProperty( $item, $prop );
 			if( isset( $result[ $key ] ) )
 				$result[ $key ][] = $item;
 			else
@@ -39,6 +39,7 @@ class ArrayUtils
 	}
 	static function itemsPropertyToArray($array,$property)
 	{
+
 		$result = array();
 		foreach($array as $item)
 		{
@@ -121,8 +122,23 @@ class ArrayUtils
 		return $result();
 	}
 
+	/*
+	  results = array(
+		   0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
+		   1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
+		);
+
+	  $nResults = filter_by_value($results, 'key2', '2');
+
+
+	Output :
+		array( 0 => array('key1' => '1', 'key2' => 2, 'key3' => 3));
+	*/
 	static function filterByValue( $array, $index, $value )
 	{
+		$newarray = array();
+		$temp = array();
+
 		if(is_array($array) && count($array)>0)
 		{
 			foreach(array_keys($array) as $key){
