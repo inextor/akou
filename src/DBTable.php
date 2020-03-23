@@ -529,13 +529,13 @@ class DBTable
 			}
 		}
 
+
 		$class_name	 = get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
-
 			if(
-				!isset( $array[ $name ] )
+				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 				)
@@ -708,6 +708,7 @@ class DBTable
 
 				$array_fields[] = '`'.$name.'`';
 
+
 				if( $this->{$name} === NULL )
 				{
 					$array_values[] = ' NULL ';
@@ -797,11 +798,15 @@ class DBTable
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, DBTable::$_control_variable_names ) || !isset( $this->{$name} ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) || ( !isset( $this->{$name} ) && !is_null( $this->{$name} ) ) )
+			{
 				continue;
+			}
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
+			{
 				continue;
+			}
 
 			if( property_exists( $name_class, $name ) )
 			{
@@ -823,9 +828,14 @@ class DBTable
 
 
 				if( ($attr_flags & DBTable::IGNORE_ON_UPDATE) != 0 )
+				{
+					//error_log('Ignoring'. $name.' BECAUSE IGNORE_ON_UPDATE' );
 					continue;
+				}
 
-				if( $this->{$name} === 'NULL' )
+				//error_log('Comparing with Null'. $name );
+
+				if( $this->{$name} === 'NULL' || $this->{$name} === NULL )
 				{
 					$update_array[]		= '`'.$name.'`=NULL';
 				}
