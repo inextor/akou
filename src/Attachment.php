@@ -25,9 +25,6 @@ class Attachment
 			$uniq_id		= uniqid();
 			$path_parts = pathinfo( $obj_FILE['tmp_name'] );
 
-			error_log( print_r( $obj_FILE, true ) );
-			error_log( print_r( $path_parts , true ) );
-
 
 			$file_content	  = file_get_contents( $obj_FILE['tmp_name'] );
 			$original_filename = $obj_FILE['name'];
