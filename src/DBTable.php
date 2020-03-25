@@ -257,9 +257,14 @@ class DBTable
 
 		$result = array();
 
-		while( $row = $resSql->fetch_assoc() )
+		$fields_info = DBTable::getFieldsInfo( $resSql );
+
+		while( $tmp_d = $resSql->fetch_assoc() )
 		{
-			$data = $asArray ? $row : $obj = static::createFromArray( $row );
+			$row = DBTable::getRowWithDataTypes($tmp_d,$fields_info );
+			$data = $asArray ? $row : $obj = static::createFromArray( $tmp_d );
+			//$data = $asArray ? $row : $obj = static::createFromArray( $row );
+
 			if( isset( $result[ $row[ $index ] ]) )
 			{
 				$result[ $row[ $index] ][] = $data;
