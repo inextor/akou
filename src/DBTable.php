@@ -9,7 +9,7 @@ class DBTable
 
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
-	public static $_parse_data_types = FALSE;
+	public static $_parse_data_types = true;
 	static $_control_variable_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
 
 
