@@ -151,4 +151,13 @@ class ArrayUtils
 		}
 		return $newarray;
 	}
+
+	static function sortByIndexAsc($index,$array)
+	{
+		return usort( $array, function($a,$b) use($index ){
+			$aa = ArrayUtils::getItemsProperty( $a, $index );
+			$bb = ArrayUtils::getItemsProperty( $b, $index );
+			return $bb < $aa ? 1 : -1;
+		});
+	}
 }
