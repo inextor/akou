@@ -170,6 +170,24 @@ class DBTable
 		return '"'.implode( '","', $escapedValues ).'"';
 	}
 
+	public static function getValueFromQuery($sql)
+	{
+		$result = $mysqli->query($sql);
+
+		if( !$result )
+			return NULL;
+
+		$fields_info = static::getFieldsInfo($result);
+
+		$row	= $resTotal->fetch_row();
+		if( $totalRow === NULL )
+			return NULL;
+
+		$row = DBTable::getRowWithDataTypes($totalRow,$fields_info );
+
+		return $row[ 0 ];
+	}
+
 	public static function getAllProperties()
 	{
 		$args= func_get_args();
