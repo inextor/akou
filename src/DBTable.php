@@ -172,20 +172,20 @@ class DBTable
 
 	public static function getValueFromQuery($sql)
 	{
-		$result = $mysqli->query($sql);
+		$result = DBTable::$connection->query($sql);
 
 		if( !$result )
 			return NULL;
 
-		$fields_info = static::getFieldsInfo($result);
+		$fields_info = DBTable::getFieldsInfo($result);
 
-		$row	= $resTotal->fetch_row();
-		if( $totalRow === NULL )
+		$row	= $result->fetch_assoc();
+		if( $row === NULL )
 			return NULL;
 
-		$row = DBTable::getRowWithDataTypes($totalRow,$fields_info );
-
-		return $row[ 0 ];
+		$rowData = DBTable::getRowWithDataTypes($row,$fields_info );
+		$keys = array_keys( $rowData );
+		return $rowData[ $keys[0] ];
 	}
 
 	public static function getAllProperties()
@@ -313,7 +313,7 @@ class DBTable
 		$result = array();
 		foreach($fields_info as $name=>$type)
 		{
-			if( $row[ $name ] === null )
+			if( !isset( $row[ $name ] ) || $row[ $name ] === null )
 			{
 				$result[ $name ]= null;
 			}
