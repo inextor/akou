@@ -34,7 +34,8 @@ class Attachment
 
 			if( $file_ext == null )
 			{
-				$extension = end(explode(".", $original_filename));
+				$tmp_explode 		= explode(".", $original_filename);
+				$extension = end( $tmp_explode );
 				$file_ext =  $extension ? $extension : null;
 			}
 
