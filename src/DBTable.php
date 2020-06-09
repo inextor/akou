@@ -139,6 +139,7 @@ class DBTable
 
 	public static function rollback( $flags=0,$name =NULL)
 	{
+		error_log('Rolling back');
 		self::$connection->rollback( $flags, $name );
 	}
 
@@ -240,6 +241,7 @@ class DBTable
 			);
 
 		$totalRow	= $resTotal->fetch_row();
+		error_log('Test xxx'.print_r( $totalRow, true) );
 		return intVal( $totalRow[ 0 ]);
 	}
 
@@ -1432,6 +1434,11 @@ class DBTable
 				if( count( $value ) )
 				{
 					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				}
+				else{
+					//Is set but is empty is searching elements but are empty so none record must match
+					error_log('DBTable:: Empty array search');
+					$constraints[] = '1>2';
 				}
 			}
 			else
