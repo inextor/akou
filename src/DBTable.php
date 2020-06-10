@@ -241,7 +241,6 @@ class DBTable
 			);
 
 		$totalRow	= $resTotal->fetch_row();
-		error_log('Test xxx'.print_r( $totalRow, true) );
 		return intVal( $totalRow[ 0 ]);
 	}
 
@@ -854,11 +853,8 @@ class DBTable
 
 				if( ($attr_flags & DBTable::IGNORE_ON_UPDATE) != 0 )
 				{
-					//error_log('Ignoring'. $name.' BECAUSE IGNORE_ON_UPDATE' );
 					continue;
 				}
-
-				//error_log('Comparing with Null'. $name );
 
 				if( $this->{$name} === 'NULL' || $this->{$name} === NULL )
 				{
@@ -1437,7 +1433,6 @@ class DBTable
 				}
 				else{
 					//Is set but is empty is searching elements but are empty so none record must match
-					error_log('DBTable:: Empty array search');
 					$constraints[] = '1>2';
 				}
 			}
