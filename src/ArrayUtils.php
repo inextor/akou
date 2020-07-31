@@ -4,6 +4,27 @@ namespace AKOU;
 class ArrayUtils
 {
 
+	static function getArguments()
+	{
+		$num_args		= func_num_args();
+		$array			= func_get_arg( 0 );
+		$indexes		= array();
+		$resultIndex	= array();
+
+		if( is_array( func_get_arg( 1 ) ) )
+		{
+			$indexes = func_get_arg( 1 );
+		}
+		else
+		{
+			for($i=1;$i<$num_args;$i++)
+			{
+				$indexes[] = func_get_arg( $i );
+			}
+		}
+		return array("object"=>$array,'arguments'=>$indexes);
+	}
+
 	static function groupByProperty($array,$prop)
 	{
 		$result = array();
@@ -65,22 +86,11 @@ class ArrayUtils
 
 	static function itemsPropertiesToArrays()
 	{
-		$num_args		= func_num_args();
-		$array			= func_get_arg( 0 );
-		$indexes		= array();
-		$resultIndex	= array();
+		$args = func_get_args();
+		$props = static::getArguments( ...$args );
 
-		if( is_array( func_get_arg( 1 ) ) )
-		{
-			$indexes = func_get_arg( 1 );
-		}
-		else
-		{
-			for($i=1;$i<$num_args;$i++)
-			{
-				$indexes[] = func_get_arg( $i );
-			}
-		}
+		$indexes	= $props['arguments'];
+		$array		= $props['object'];
 
 		foreach( $indexes as $index )
 		{
