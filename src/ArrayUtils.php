@@ -170,4 +170,23 @@ class ArrayUtils
 			return $bb < $aa ? 1 : -1;
 		});
 	}
+
+	static function sortByIndexAscending($index,$array)
+	{
+		return static::sortByIndexAsc( $index, $array );
+	}
+
+	static function sortByIndexDesc($index, $array)
+	{
+		return usort( $array, function($a,$b) use($index ){
+			$aa = ArrayUtils::getItemsProperty( $a, $index );
+			$bb = ArrayUtils::getItemsProperty( $b, $index );
+			return $bb > $aa ? -1 : 1;
+		});
+	}
+
+	static function sortByIndexDescending( $index, $array)
+	{
+		return static::sortByIndexDesc( $index, $array );
+	}
 }
