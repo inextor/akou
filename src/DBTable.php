@@ -203,18 +203,7 @@ class DBTable
 		if( func_num_args() > 0 )
 		{
 			$array			= func_get_arg( 0 );
-
-			if( is_array( $array ) )
-			{
-				$indexes = $array;
-			}
-			else
-			{
-				for($i=0;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
+			$indexes = is_array( $array ) ? $array : func_get_args();
 		}
 
 		$obj = new static();
@@ -316,7 +305,7 @@ class DBTable
 		{
 			if( !isset( $row[ $name ] ) || $row[ $name ] === null )
 			{
-				$result[ $name ]= null;
+				$result[ $name ] = null;
 			}
 			else
 			{
@@ -383,7 +372,6 @@ class DBTable
 			}
 			else
 			{
-
 				$_obj = static::createFromArray( $row );
 
 				if( $dictionary_index && !empty( $_obj->{ $dictionary_index } ) )
@@ -401,7 +389,6 @@ class DBTable
 
 	public static function createFromQuery( $query, $connection = NULL)
 	{
-
 		$conn = $connection ?: self::$connection;
 
 		$result = $conn->query( $query );
@@ -531,28 +518,14 @@ class DBTable
 
 	function assignFromArray()
 	{
-		$num_args		= func_num_args();
-		$indexes		= array();
-		$array			= func_get_arg( 0 );
+		$args = func_get_args();
+		$args 		= ArrayUtils::getArguments(...$args);
 
-		if( empty($num_args) || !is_array( $array ) )
+		$array		= $args['object'];
+		$indexes	= $args['arguments'];
+
+		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
-
-		if( $num_args > 1 )
-		{
-			if( is_array( func_get_arg( 1 ) ) )
-			{
-				$indexes = func_get_arg( 1 );
-			}
-			else
-			{
-				for($i=1;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
-		}
-
 
 		$class_name	 = get_class($this);
 		$i				= 0;
@@ -801,12 +774,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[ 0 ];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$this->_lastQuery	= $this->getUpdateSql( $indexes );
@@ -849,7 +817,6 @@ class DBTable
 						$attr_flags			= $arrayFlags[ $name ];
 					}
 				}
-
 
 				if( ($attr_flags & DBTable::IGNORE_ON_UPDATE) != 0 )
 				{
@@ -897,12 +864,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[0];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$_array = array();
@@ -963,12 +925,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[ 0 ];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$_array = array();
@@ -1047,27 +1004,14 @@ class DBTable
 
 	function assignFromArrayExcluding()
 	{
-		$num_args	= func_num_args();
-		$indexes	= array();
-		$array		= func_get_arg( 0 );
+		$args = func_get_args();
+		$args 		= ArrayUtils::getArguments(...$args);
 
-		if( empty($num_args) || !is_array( $array ) )
+		$array		= $args['object'];
+		$indexes	= $args['arguments'];
+
+		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
-
-		if( $num_args > 1 )
-		{
-			if( is_array( func_get_arg( 1 ) ) )
-			{
-				$indexes = func_get_arg( 1 );
-			}
-			else
-			{
-				for($i=1;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
-		}
 
 		$class_name	 = get_class($this);
 		$i				= 0;
