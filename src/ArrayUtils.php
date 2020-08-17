@@ -11,7 +11,7 @@ class ArrayUtils
 		$indexes		= array();
 		$resultIndex	= array();
 
-		if( is_array( func_get_arg( 1 ) ) )
+		if($num_args > 1 && is_array( func_get_arg( 1 ) ) )
 		{
 			$indexes = func_get_arg( 1 );
 		}
@@ -25,6 +25,10 @@ class ArrayUtils
 		return array("object"=>$array,'arguments'=>$indexes);
 	}
 
+	static function groupByIndex($array,$prop)
+	{
+		return static::groupByProperty($array, $prop );
+	}
 	static function groupByProperty($array,$prop)
 	{
 		$result = array();
