@@ -58,14 +58,31 @@ class ArrayUtils
 		return NULL;
 	}
 
-	static function getItemsProperty($array,$property)
+	static function getItemsProperty($array,$property,$uniq=FALSE)
 	{
-		return static::itemsPropertyToArray( $array, $property );
+		return static::itemsPropertyToArray( $array, $property, $uniq);
 	}
-	static function itemsPropertyToArray($array,$property)
+	static function itemsPropertyToArray($array,$property,$uniq=FALSE)
 	{
-
 		$result = array();
+
+		if( $uniq )
+		{
+			foreach($array as $item)
+			{
+				if( is_object( $item ) )
+				{
+					if( !empty( $item->{ $property } ) )
+							$result[$item->{ $property }] = true;
+				}
+				else if( !empty( $item[$property] ) )
+				{
+					$result[ $item[$property] ] = true;
+				}
+			}
+			return array_keys( $result );
+		}
+
 		foreach($array as $item)
 		{
 			if( is_object( $item ) )
