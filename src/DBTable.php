@@ -1475,4 +1475,14 @@ class DBTable
 			}
 		}
 	}
+
+	public function getErrorNumber()
+	{
+		return $this->_conn->errno;
+	}
+
+	public function getError()
+	{
+		return $this->_conn->error;
+	}
 }
