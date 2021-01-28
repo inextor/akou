@@ -1420,6 +1420,10 @@ class DBTable
 				{
 					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
 				}
+				else
+				{
+					return array();
+				}
 			}
 			else
 			{
