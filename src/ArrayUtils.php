@@ -9,7 +9,6 @@ class ArrayUtils
 		$num_args		= func_num_args();
 		$array			= func_get_arg( 0 );
 		$indexes		= array();
-		$resultIndex	= array();
 
 		if($num_args > 1 && is_array( func_get_arg( 1 ) ) )
 		{
@@ -112,6 +111,8 @@ class ArrayUtils
 
 		$indexes	= $props['arguments'];
 		$array		= $props['object'];
+
+		$resultIndex	= array();
 
 		foreach( $indexes as $index )
 		{
