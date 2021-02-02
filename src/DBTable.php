@@ -1231,7 +1231,6 @@ class DBTable
 	{
 
 		$res	= self::$connection->query( 'SHOW TABLES' );
-		$tables = array();
 
 		$phpCode = $namespace ? "namespace $namespace;\n": '';
 		$phpCode.= 'use \akou\DBTable;';
@@ -1292,7 +1291,6 @@ class DBTable
 	{
 		$conn			= $mysqli ?: self::$connection;
 		$addHeader		= is_array( $row_header );
-		$size			= 0;
 
 		if( $stmt = $conn->prepare( $query ))
 		{
