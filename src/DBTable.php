@@ -1232,8 +1232,8 @@ class DBTable
 
 		$res	= self::$connection->query( 'SHOW TABLES' );
 
-		$phpCode = $namespace ? "namespace $namespace;\n": '';
-		$phpCode.= 'use \akou\DBTable;';
+		$phpCode = $namespace ? "namespace $namespace;".PHP_EOL : '';
+		$phpCode.= 'use \akou\DBTable;'.PHP_EOL;
 
 		while( $row = $res->fetch_row()  )
 		{
