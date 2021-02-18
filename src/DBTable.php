@@ -47,13 +47,13 @@ class DBTable
 	const DATE_VALUE			= 1048576;
 
 
-	 //Dont add to array when is calle $obj->toArrayExclude()
+	//Dont add to array when is calle $obj->toArrayExclude()
 	//const NO_NULL				=	131072; //Cant be set 'NULL'	//not implemented yet
 	//const NO_EMPTY				=	262144; //Cant be set 'EMPTY' //cant be set 'NULL' OR 'EMPTY'
 
 	//
-	const DISCOUNTINUED		 =	131072; //DO_NOT_EXPORT_EXTERNAL
-	const IS_SENSITIVE_DATA	 =	131072; //DO_NOT_EXPORT_EXTERNAL
+	const DISCOUNTINUED			=	131072; //DO_NOT_EXPORT_EXTERNAL
+	const IS_SENSITIVE_DATA		=	131072; //DO_NOT_EXPORT_EXTERNAL
 
 	const REQUIRED_ON_SAVE		=	6144;//REQUIRED_ON_INSERT |	REQUIRED_ON_UPDATE;
 	const IGNORE_ON_SAVE		=	1536;//IGNORE_ON_INSERT	|	IGNORE_ON_UPDATE;	//No sav ed on insert or update //only read value like an autoincrement or on update CURRENT_TIMESTAMP
@@ -334,8 +334,8 @@ class DBTable
 	}
 
 	/*
-	 * $dictionary_index the index dictionary example dictionary by id
-	 * if false return a simple array
+	* $dictionary_index the index dictionary example dictionary by id
+	* if false return a simple array
 	*/
 	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
 	{
@@ -420,7 +420,7 @@ class DBTable
 	{
 		$_clas_name	= $asTableName == null ?self::getBaseClassName() : $asTableName;
 		$c			= 0;
-		$obj		 = $this;
+		$obj		= $this;
 
 		foreach ($obj as $name => $value)
 		{
@@ -438,9 +438,9 @@ class DBTable
 
 	public static function getUniqSelect($asTableName=null)
 	{
-		$fields		 = array();
+		$fields		= array();
 		$c				= 0;
-		$_clas_name	 = $asTableName == null ? self::getBaseClassName() : $asTableName;
+		$_clas_name	= $asTableName == null ? self::getBaseClassName() : $asTableName;
 		$obj			= new static();
 
 		foreach ($obj as $name => $value)
@@ -527,7 +527,7 @@ class DBTable
 		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
 
-		$class_name	 = get_class($this);
+		$class_name		= get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
@@ -637,7 +637,7 @@ class DBTable
 					if( is_array( $arrayFlags[ $name ] ) )
 					{
 						if( !empty( $arrayFlags[$name]['flags'] ))
-							$attr_flags		 = $arrayFlags[$name]['flags']?:0;
+							$attr_flags	= $arrayFlags[$name]['flags']?:0;
 
 						if( !empty(	$arrayFlags[$name]['values'] ) )
 							$validation_value	= $arrayFlags[$name];
@@ -1013,7 +1013,7 @@ class DBTable
 		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
 
-		$class_name	 = get_class($this);
+		$class_name	= get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
@@ -1264,7 +1264,7 @@ class DBTable
 		}
 
 		$stmt->close();
-	 */
+	*/
 	public static function getStmtBindResult( $query,&$row,$mysqli=NULL )
 	{
 		$conn			= $mysqli ?: self::$connection;
