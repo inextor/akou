@@ -1336,8 +1336,23 @@ class DBTable
 			if( !in_array( $key, $properties ) )
 				continue;
 
-			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+			if( is_array( $value ) )
+			{
+				if( count( $value ) )
+				{
+					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+				}
+				else{
+					//Is set but is empty is searching elements but are empty so none record must match
+					$constraints[] = '1>2';
+				}
+			}
+			else
+			{
+				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+			}
 		}
+
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str. ' LIMIT 1' ;
 
