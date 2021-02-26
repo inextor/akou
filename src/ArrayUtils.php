@@ -24,6 +24,20 @@ class ArrayUtils
 		return array("object"=>$array,'arguments'=>$indexes);
 	}
 
+	static function getDictionaryByIndex($array,$prop)
+	{
+		$result = array();
+		foreach( $array as $item )
+		{
+			$key = static::getProperty( $item, $prop );
+			if( $key == null )
+				continue;
+
+			$result[ $key ] = $item;
+		}
+		return $result;
+	}
+
 	static function groupByIndex($array,$prop)
 	{
 		return static::groupByProperty($array, $prop );
