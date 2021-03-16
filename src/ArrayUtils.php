@@ -24,6 +24,21 @@ class ArrayUtils
 		return array("object"=>$array,'arguments'=>$indexes);
 	}
 
+	static function removeElementsWithValueInProperty($array,$index,$value)
+	{
+		$new_array = array();
+
+		foreach($array as $something)
+		{
+			$v = static::getProperty($something,$index);
+			if( $v != $value )
+			{
+				$new_array[] = $something;
+			}
+		}
+		return $new_array;
+	}
+
 	static function getDictionaryByIndex($array,$prop)
 	{
 		$result = array();
