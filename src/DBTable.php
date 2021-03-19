@@ -10,7 +10,7 @@ class DBTable
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
 	public static $_parse_data_types = true;
-	static $_control_variable_names = array( '_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
+	static $_control_variable_names = array( '_sqlCmp', '_lastQuery', '_attrFlags', '_conn', '_is_duplicated_error' );
 
 	const STARTS_WITH_SYMBOL='^';
 	const ENDS_WITH_SYMBOL='$';
@@ -112,7 +112,7 @@ class DBTable
 	var $_conn;
 	var $_is_duplicated_error=false;
 
-	public static function init( $host, $user, $password ,$db )
+	public static function init( $host, $user, $password, $db )
 	{
 		$mysqli = new \mysqli( $host, $user, $password, $db );
 
@@ -435,7 +435,7 @@ class DBTable
 
 		foreach ($obj as $name => $value )
 		{
-			if( in_array($name , DBTable::$_control_variable_names ) )
+			if( in_array($name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if(isset($array[$_clas_name.'__'.$c]))
@@ -456,12 +456,12 @@ class DBTable
 
 		foreach ($obj as $name => $value )
 		{
-			if( in_array( $name , DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			$fields[] ='`'.$_clas_name.'`.`'.$name.'` AS '.$_clas_name.'__'.($c++);
 		}
-		return join(',',$fields);
+		return join( ',', $fields );
 	}
 
 	function getLastQuery()
@@ -482,7 +482,7 @@ class DBTable
 
 		foreach ($this as $name => $value )
 		{
-			if( in_array( $name , DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if( property_exists($name_class,$name) && isset($this->{$name}) )
@@ -552,7 +552,7 @@ class DBTable
 				continue;
 			}
 
-			if( !empty( $indexes ) && ! in_array($name,$indexes,TRUE) )
+			if( !empty( $indexes ) && ! in_array($name,$indexes, TRUE) )
 				continue;
 
 			$this->{$name} = $array[ $name ];
@@ -857,7 +857,7 @@ class DBTable
 			}
 		}
 
-		$updatefields		= implode( ',' ,$update_array );
+		$updatefields		= implode( ',', $update_array );
 		return 'UPDATE `'.self::getBaseClassName().'` SET '.$updatefields.' WHERE '.$this->_sqlCmp.' LIMIT 1';
 	}
 
@@ -875,7 +875,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[ 0 ] : $arg_list;
 		}
 
 		$_array = array();
@@ -885,7 +885,7 @@ class DBTable
 
 		foreach ($obj as $name => $value )
 		{
-			if( in_array( $name,DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if(in_array( $name, $indexes ))
@@ -898,7 +898,7 @@ class DBTable
 				$flags = $arrayFlags[ $name ];
 
 				if( is_array( $arrayFlags[ $name ] ) )
-					$flags	= $arrayFlags[$name]['flags']?:0;
+					$flags	= $arrayFlags[ $name ][ 'flags' ] ?:0;
 
 				if( $flags & self::IS_SENSITIVE_DATA )
 					continue;
@@ -936,7 +936,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[ 0 ] : $arg_list;
 		}
 
 		$_array = array();
@@ -946,7 +946,7 @@ class DBTable
 
 		foreach ($obj as $name => $value )
 		{
-			if( in_array( $name ,DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if( !empty( $indexes ) && !in_array( $name, $indexes ))
@@ -959,7 +959,7 @@ class DBTable
 				$flags	= $arrayFlags[ $name ];
 
 				if( is_array( $arrayFlags[ $name ] ) )
-					$flags	= $arrayFlags[$name]['flags']?:0;
+					$flags	= $arrayFlags[ $name][ 'flags' ]?:0;
 			}
 
 			if( $flags & self::INT_VALUE )
@@ -1018,8 +1018,8 @@ class DBTable
 		$args = func_get_args();
 		$args 		= ArrayUtils::getArguments(...$args);
 
-		$array		= $args['object'];
-		$indexes	= $args['arguments'];
+		$array		= $args[ 'object' ];
+		$indexes	= $args[ 'arguments' ];
 
 		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
@@ -1087,8 +1087,8 @@ class DBTable
 
 			if( is_array( $arrayFlags[ $key ] ) )
 			{
-				if( !empty(	$arrayFlags[ $key ]['flags'] ))
-					$attr_flags = $arrayFlags[ $key ]['flags'];
+				if( !empty(	$arrayFlags[ $key ][ 'flags' ] ))
+					$attr_flags = $arrayFlags[ $key ][ 'flags' ];
 
 				if( !empty( $arrayFlags[ $key ] ) )
 					$params	= $arrayFlags[ $key ];
@@ -1129,36 +1129,36 @@ class DBTable
 				throw new ValidationException( $altMessage.$key.' is not a valid number ' );
 			}
 
-			if( !empty( $params['min'] ) && intval( $this->{$key} ) < intval( $params['min'] ) )
+			if( !empty( $params[ 'min' ] ) && intval( $this->{$key} ) < intval( $params[ 'min' ] ) )
 			{
 				throw new ValidationException
 				(
-					$alternateMsg.'The minimun value for '.$key.' is '.$params['min']
+					$alternateMsg.'The minimun value for '.$key.' is '.$params[ 'min' ]
 				);
 			}
 
-			if( !empty( $params['max'] ) && intval( $this->{$key} ) > intval( $params['max'] ) )
+			if( !empty( $params[ 'max' ] ) && intval( $this->{$key} ) > intval( $params[ 'max' ] ) )
 			{
 				throw new ValidationException
 				(
-					$alternateMsg.'The maximun value for '.$key.' is '.$params['min']
+					$alternateMsg.'The maximun value for '.$key.' is '.$params[ 'min' ]
 				);
 			}
 		}
 		elseif( ( DBTable::STRING_VALUE & $flags ) != 0 )
 		{
-			if( !empty( $params['min'] ) && mb_strlen( $this->{$key} ) < intval( $params['min'] ) )
+			if( !empty( $params[ 'min' ] ) && mb_strlen( $this->{$key} ) < intval( $params[ 'min' ] ) )
 			{
 				throw new ValidationException
 				(
-					$altMessage.'The minimun value for '.$key.' is '.$params['min']
+					$altMessage.'The minimun value for '.$key.' is '.$params[ 'min' ]
 				);
 			}
-			if( !empty( $params['max'] ) && mb_strlen( $this->{$key} ) > intval( $params['max'] ) )
+			if( !empty( $params[ 'max' ] ) && mb_strlen( $this->{$key} ) > intval( $params[ 'max' ] ) )
 			{
 				throw new ValidationException
 				(
-					$altMessage.'The maximun value for '.$key.' is '.$params['min']
+					$altMessage.'The maximun value for '.$key.' is '.$params[ 'min' ]
 				);
 			}
 		}
@@ -1200,7 +1200,7 @@ class DBTable
 			if( $this->{$key} == 'CURRENT_TIMESTAMP' )
 				return;
 
-			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/",$this->{$key}))
+			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key}))
 			{
 				if(	strtotime( $this->{$key})===FALSE )
 				{
@@ -1210,7 +1210,7 @@ class DBTable
 		}
 		elseif( ( DBTable::DATE_VALUE ) & $flags != 0 )
 		{
-			if( !preg_match("/^\d{4}-\d{2}-\d{2}$/",$this->{$key}))
+			if( !preg_match("/^\d{4}-\d{2}-\d{2}$/", $this->{$key}))
 			{
 				if(	strtotime( $this->{$key} )===FALSE )
 				{
@@ -1232,7 +1232,7 @@ class DBTable
 			{
 				throw new ValidationException
 				(
-					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'],true )
+					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'], true )
 				);
 			}
 		}
@@ -1419,47 +1419,47 @@ class DBTable
 			{
 				if( static::endsWith( DBTable::LIKE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::LIKE_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape( $array[$key] ).'%"';
+					$f_key = str_replace( DBTable::LIKE_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape( $array[ $key ] ).'%"';
 				}
 				else if( static::endsWith( DBTable::STARTS_WITH_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::STARTS_WITH_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::STARTS_WITH_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape( $array[ $key ] ).'%"';
 				}
 				else if( static::endsWith( DBTable::ENDS_WITH_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::ENDS_WITH_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::ENDS_WITH_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape( $array[ $key ] ).'%"';
 				}
 				else if( static::endsWith( DBTable::LT_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::LT_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` < "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::LT_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` < "'.static::escape( $array[ $key ] ).'%"';
 				}
 				elseif( static::endsWith( DBTable::LE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::LE_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` <= "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::LE_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'%"';
 				}
 				elseif( static::endsWith( DBTable::GE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::GE_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` >= "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::GE_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` >= "'.static::escape( $array[ $key ] ).'%"';
 				}
 				elseif( static::endsWith( DBTable::GT_SYMBOL, $key ) )
 				{
-					$f_key = str_replace( DBTable::GT_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` > "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::GT_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` > "'.static::escape( $array[ $key ] ).'%"';
 				}
-				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[$key] )
+				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[ $key ] )
 				{
-					$f_key = str_replace( DBTable::NULL_SYMBOL,"", $key );
-					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape($array[ $key ]).'%"';
+					$f_key = str_replace( DBTable::NULL_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape( $array[ $key ] ).'%"';
 				}
 				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[ $key ] )
 				{
-					$f_key = str_replace( DBTable::NOT_NULL_SYMBOL,"", $key );
+					$f_key = str_replace( DBTable::NOT_NULL_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` IS NOT NULL';
 				}
 			}
@@ -1476,7 +1476,7 @@ class DBTable
 			$sql .= ' FOR UPDATE ';
 
 		if( $limit && is_int( $limit) )
-			$sql .= ' LIMIT '.intval($limit).' ';
+			$sql .= ' LIMIT '.intval( $limit ).' ';
 
 		return $sql;
 	}
@@ -1511,14 +1511,14 @@ class DBTable
 
 		foreach ($obj as $name => $value )
 		{
-			if( in_array($name , DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			$trimValue = $trimValues ? $value : trim( $value );
 
 			if( empty( $trimValue ) )
 			{
-				if( !$unsetZeros && ( $trimValue === 0 || $trimValue === "0" || $trimValue === 0.0 ))
+				if( !$unsetZeros && ( $trimValue === 0 || $trimValue === "0" || $trimValue === 0.0 ) )
 					continue;
 
 				if( !$unsetNulls && $value === NULL )
