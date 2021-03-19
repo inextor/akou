@@ -9,6 +9,7 @@ class RestController
 		$this->response = "";
 		$this->allow_credentials = true;
 		$this->cors = false;
+		$this->method_params = null;
 	}
 
 	function defaultOptions()
@@ -64,8 +65,8 @@ class RestController
 		{
 			if( isset( $_SERVER['HTTP_ORIGIN'] ) )
 			{
-				header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-				header('Access-Control-Allow-Credentials: true');
+			header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+			header('Access-Control-Allow-Credentials: true');
 			}
 			else
 			{
@@ -126,6 +127,11 @@ class RestController
 
 	function getMethodParams()
 	{
+		if( $this->method_params !== null )
+		{
+			return $this->method_params;
+		}
+
 		if( empty( $_SERVER["CONTENT_TYPE"] ) )
 		{
 			error_log("LOOKING FOR CONTENT_TYPE".json_encode(array_keys( $_SERVER )) );
@@ -134,12 +140,14 @@ class RestController
 		{
 			$info = file_get_contents("php://input");
 			parse_str( $info, $post_vars);
+			$this->method_params = $post_vars;
 			return $post_vars;
 		}
 
 		if( $_SERVER["CONTENT_TYPE"] == 'application/json' )
 		{
-			return json_decode( file_get_contents("php://input"),true );
+			$this->method_params = json_decode( file_get_contents("php://input"),true );
+			return $this->method_params;
 		}
 
 		return array();

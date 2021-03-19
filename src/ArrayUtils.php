@@ -3,12 +3,66 @@ namespace AKOU;
 
 class ArrayUtils
 {
+
+	static function getArguments()
+	{
+		$num_args		= func_num_args();
+		$array			= func_get_arg( 0 );
+		$indexes		= array();
+
+		if($num_args > 1 && is_array( func_get_arg( 1 ) ) )
+		{
+			$indexes = func_get_arg( 1 );
+		}
+		else
+		{
+			for($i=1;$i<$num_args;$i++)
+			{
+				$indexes[] = func_get_arg( $i );
+			}
+		}
+		return array("object"=>$array,'arguments'=>$indexes);
+	}
+
+	static function removeElementsWithValueInProperty($array,$index,$value)
+	{
+		$new_array = array();
+
+		foreach($array as $something)
+		{
+			$v = static::getProperty($something,$index);
+			if( $v != $value )
+			{
+				$new_array[] = $something;
+			}
+		}
+		return $new_array;
+	}
+
+	static function getDictionaryByIndex($array,$prop)
+	{
+		$result = array();
+		foreach( $array as $item )
+		{
+			$key = static::getProperty( $item, $prop );
+			if( $key == null )
+				continue;
+
+			$result[ $key ] = $item;
+		}
+		return $result;
+	}
+
+	static function groupByIndex($array,$prop)
+	{
+		return static::groupByProperty($array, $prop );
+	}
 	static function groupByProperty($array,$prop)
 	{
 		$result = array();
 		foreach( $array as $item )
 		{
-			$key = is_object( $item ) ? $item->{$prop } : $item[ $prop ];
+			$key = static::getProperty( $item, $prop );
 			if( isset( $result[ $key ] ) )
 				$result[ $key ][] = $item;
 			else
@@ -32,14 +86,31 @@ class ArrayUtils
 		return NULL;
 	}
 
-	static function getItemsProperty($array,$property)
+	static function getItemsProperty($array,$property,$uniq=FALSE)
 	{
-		return static::itemsPropertyToArray( $array, $property );
+		return static::itemsPropertyToArray( $array, $property, $uniq);
 	}
-
-	static function itemsPropertyToArray($array,$property)
+	static function itemsPropertyToArray($array,$property,$uniq=FALSE)
 	{
 		$result = array();
+
+		if( $uniq )
+		{
+			foreach($array as $item)
+			{
+				if( is_object( $item ) )
+				{
+					if( !empty( $item->{ $property } ) )
+							$result[$item->{ $property }] = true;
+				}
+				else if( !empty( $item[$property] ) )
+				{
+					$result[ $item[$property] ] = true;
+				}
+			}
+			return array_keys( $result );
+		}
+
 		foreach($array as $item)
 		{
 			if( is_object( $item ) )
@@ -54,30 +125,23 @@ class ArrayUtils
 		}
 		return $result;
 	}
+
 	static function getItemsProperties()
 	{
 
 		$args= func_get_args();
 		return static::itemsPropertiesToArrays( ...$args);
 	}
+
 	static function itemsPropertiesToArrays()
 	{
-		$num_args		= func_num_args();
-		$array			= func_get_arg( 0 );
-		$indexes		= array();
-		$resultIndex	= array();
+		$args = func_get_args();
+		$props = static::getArguments( ...$args );
 
-		if( is_array( func_get_arg( 1 ) ) )
-		{
-			$indexes = func_get_arg( 1 );
-		}
-		else
-		{
-			for($i=1;$i<$num_args;$i++)
-			{
-				$indexes[] = func_get_arg( $i );
-			}
-		}
+		$indexes	= $props['arguments'];
+		$array		= $props['object'];
+
+		$resultIndex	= array();
 
 		foreach( $indexes as $index )
 		{
@@ -119,18 +183,73 @@ class ArrayUtils
 		return $result();
 	}
 
+	static function filterByMultipleValues($array, $index, $array_values )
+	{
+		$newarray = array();
+
+		if(is_array($array) && count($array)>0 && is_array($array_values) )
+		{
+			foreach(array_keys($array) as $key)
+			{
+				if( in_array(  $array[$key][$index] , $array_values) )
+					$newarray[$key] = $array[$key];
+			}
+		}
+		return $newarray;
+	}
+	/*
+	  results = array(
+		   0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
+		   1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
+		);
+
+	  $nResults = filter_by_value($results, 'key2', '2');
+
+
+	Output :
+		array( 0 => array('key1' => '1', 'key2' => 2, 'key3' => 3));
+	*/
+
 	static function filterByValue( $array, $index, $value )
 	{
+		$newarray = array();
+
 		if(is_array($array) && count($array)>0)
 		{
 			foreach(array_keys($array) as $key){
-				$temp[$key] = $array[$key][$index];
-
-				if ($temp[$key] == $value){
-					$newarray[$key] = $array[$key];
+					if ( $array[$key][$index] == $value){
+						$newarray[$key] = $array[$key];
 				}
 			}
 		}
 		return $newarray;
+	}
+
+	static function sortByIndexAsc($index,$array)
+	{
+		return usort( $array, function($a,$b) use($index ){
+			$aa = ArrayUtils::getItemsProperty( $a, $index );
+			$bb = ArrayUtils::getItemsProperty( $b, $index );
+			return $bb < $aa ? 1 : -1;
+		});
+	}
+
+	static function sortByIndexAscending($index,$array)
+	{
+		return static::sortByIndexAsc( $index, $array );
+	}
+
+	static function sortByIndexDesc($index, $array)
+	{
+		return usort( $array, function($a,$b) use($index ){
+			$aa = ArrayUtils::getItemsProperty( $a, $index );
+			$bb = ArrayUtils::getItemsProperty( $b, $index );
+			return $bb > $aa ? -1 : 1;
+		});
+	}
+
+	static function sortByIndexDescending( $index, $array)
+	{
+		return static::sortByIndexDesc( $index, $array );
 	}
 }

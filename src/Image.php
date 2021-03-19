@@ -2,7 +2,7 @@
 
 namespace AKOU;
 
-class Image 
+class Image
 {
     function getImageInfo()
 	{
@@ -166,6 +166,7 @@ class Image
 			)
 		);
 	}
+
 
 
 	function saveImageToFile($filename,$image_content, $image_type, $dirname )

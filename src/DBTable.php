@@ -9,8 +9,20 @@ class DBTable
 
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
-	public static $_parse_data_types = FALSE;
+	public static $_parse_data_types = true;
 	static $_control_variable_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
+
+	const STARTS_WITH_SYMBOL='^';
+	const ENDS_WITH_SYMBOL='$';
+	const LIKE_SYMBOL='~~';
+	const CSV_SYMBOL=',';
+	const LT_SYMBOL='<';
+	const LE_SYMBOL='<~=';
+	const GE_SYMBOL='>~=';
+	const EQ_SYMBOL='';
+	const GT_SYMBOL='>';
+	const NOT_NULL_SYMBOL = '@';
+	const NULL_SYMBOL = '_NULL';
 
 
 	const UNSET_TRIMED_VALUES	= 1;
@@ -47,13 +59,13 @@ class DBTable
 	const DATE_VALUE			= 1048576;
 
 
-	 //Dont add to array when is calle $obj->toArrayExclude()
+	//Dont add to array when is calle $obj->toArrayExclude()
 	//const NO_NULL				=	131072; //Cant be set 'NULL'	//not implemented yet
 	//const NO_EMPTY				=	262144; //Cant be set 'EMPTY' //cant be set 'NULL' OR 'EMPTY'
 
 	//
-	const DISCOUNTINUED		 =	131072; //DO_NOT_EXPORT_EXTERNAL
-	const IS_SENSITIVE_DATA	 =	131072; //DO_NOT_EXPORT_EXTERNAL
+	const DISCOUNTINUED			=	131072; //DO_NOT_EXPORT_EXTERNAL
+	const IS_SENSITIVE_DATA		=	131072; //DO_NOT_EXPORT_EXTERNAL
 
 	const REQUIRED_ON_SAVE		=	6144;//REQUIRED_ON_INSERT |	REQUIRED_ON_UPDATE;
 	const IGNORE_ON_SAVE		=	1536;//IGNORE_ON_INSERT	|	IGNORE_ON_UPDATE;	//No sav ed on insert or update //only read value like an autoincrement or on update CURRENT_TIMESTAMP
@@ -139,6 +151,7 @@ class DBTable
 
 	public static function rollback( $flags=0,$name =NULL)
 	{
+		error_log('Rolling back');
 		self::$connection->rollback( $flags, $name );
 	}
 
@@ -170,6 +183,24 @@ class DBTable
 		return '"'.implode( '","', $escapedValues ).'"';
 	}
 
+	public static function getValueFromQuery($sql)
+	{
+		$result = DBTable::$connection->query($sql);
+
+		if( !$result )
+			return NULL;
+
+		$fields_info = DBTable::getFieldsInfo($result);
+
+		$row	= $result->fetch_assoc();
+		if( $row === NULL )
+			return NULL;
+
+		$rowData = DBTable::getRowWithDataTypes($row,$fields_info );
+		$keys = array_keys( $rowData );
+		return $rowData[ $keys[0] ];
+	}
+
 	public static function getAllProperties()
 	{
 		$args= func_get_args();
@@ -184,18 +215,7 @@ class DBTable
 		if( func_num_args() > 0 )
 		{
 			$array			= func_get_arg( 0 );
-
-			if( is_array( $array ) )
-			{
-				$indexes = $array;
-			}
-			else
-			{
-				for($i=0;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
+			$indexes = is_array( $array ) ? $array : func_get_args();
 		}
 
 		$obj = new static();
@@ -257,9 +277,14 @@ class DBTable
 
 		$result = array();
 
-		while( $row = $resSql->fetch_assoc() )
+		$fields_info = DBTable::getFieldsInfo( $resSql );
+
+		while( $tmp_d = $resSql->fetch_assoc() )
 		{
-			$data = $asArray ? $row : $obj = static::createFromArray( $row );
+			$row = DBTable::getRowWithDataTypes($tmp_d,$fields_info );
+			$data = $asArray ? $row : $obj = static::createFromArray( $tmp_d );
+			//$data = $asArray ? $row : $obj = static::createFromArray( $row );
+
 			if( isset( $result[ $row[ $index ] ]) )
 			{
 				$result[ $row[ $index] ][] = $data;
@@ -290,9 +315,9 @@ class DBTable
 		$result = array();
 		foreach($fields_info as $name=>$type)
 		{
-			if( $row[ $name ] === null )
+			if( !isset( $row[ $name ] ) || $row[ $name ] === null )
 			{
-				$result[ $name ]= null;
+				$result[ $name ] = null;
 			}
 			else
 			{
@@ -321,8 +346,8 @@ class DBTable
 	}
 
 	/*
-	 * $dictionary_index the index dictionary example dictionary by id
-	 * if false return a simple array
+	* $dictionary_index the index dictionary example dictionary by id
+	* if false return a simple array
 	*/
 	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
 	{
@@ -359,7 +384,6 @@ class DBTable
 			}
 			else
 			{
-
 				$_obj = static::createFromArray( $row );
 
 				if( $dictionary_index && !empty( $_obj->{ $dictionary_index } ) )
@@ -377,7 +401,6 @@ class DBTable
 
 	public static function createFromQuery( $query, $connection = NULL)
 	{
-
 		$conn = $connection ?: self::$connection;
 
 		$result = $conn->query( $query );
@@ -409,7 +432,7 @@ class DBTable
 	{
 		$_clas_name	= $asTableName == null ?self::getBaseClassName() : $asTableName;
 		$c			= 0;
-		$obj		 = $this;
+		$obj		= $this;
 
 		foreach ($obj as $name => $value)
 		{
@@ -427,9 +450,9 @@ class DBTable
 
 	public static function getUniqSelect($asTableName=null)
 	{
-		$fields		 = array();
+		$fields		= array();
 		$c				= 0;
-		$_clas_name	 = $asTableName == null ? self::getBaseClassName() : $asTableName;
+		$_clas_name	= $asTableName == null ? self::getBaseClassName() : $asTableName;
 		$obj			= new static();
 
 		foreach ($obj as $name => $value)
@@ -507,35 +530,21 @@ class DBTable
 
 	function assignFromArray()
 	{
-		$num_args		= func_num_args();
-		$indexes		= array();
-		$array			= func_get_arg( 0 );
+		$args = func_get_args();
+		$args 		= ArrayUtils::getArguments(...$args);
 
-		if( empty($num_args) || !is_array( $array ) )
+		$array		= $args['object'];
+		$indexes	= $args['arguments'];
+
+		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
 
-		if( $num_args > 1 )
-		{
-			if( is_array( func_get_arg( 1 ) ) )
-			{
-				$indexes = func_get_arg( 1 );
-			}
-			else
-			{
-				for($i=1;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
-		}
-
-		$class_name	 = get_class($this);
+		$class_name		= get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
-
 			if(
-				!isset( $array[ $name ] )
+				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 				)
@@ -640,7 +649,7 @@ class DBTable
 					if( is_array( $arrayFlags[ $name ] ) )
 					{
 						if( !empty( $arrayFlags[$name]['flags'] ))
-							$attr_flags		 = $arrayFlags[$name]['flags']?:0;
+							$attr_flags	= $arrayFlags[$name]['flags']?:0;
 
 						if( !empty(	$arrayFlags[$name]['values'] ) )
 							$validation_value	= $arrayFlags[$name];
@@ -708,6 +717,7 @@ class DBTable
 
 				$array_fields[] = '`'.$name.'`';
 
+
 				if( $this->{$name} === NULL )
 				{
 					$array_values[] = ' NULL ';
@@ -745,7 +755,7 @@ class DBTable
 
 	function delete()
 	{
-		$this->deleteDb();
+		return $this->deleteDb();
 	}
 
 	function deleteDb()
@@ -776,12 +786,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[ 0 ];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$this->_lastQuery	= $this->getUpdateSql( $indexes );
@@ -797,11 +802,15 @@ class DBTable
 
 		foreach ($_tmp as $name => $value)
 		{
-			if( in_array( $name, DBTable::$_control_variable_names ) || !isset( $this->{$name} ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) || ( !isset( $this->{$name} ) && !is_null( $this->{$name} ) ) )
+			{
 				continue;
+			}
 
 			if( !empty( $fieldsToUpdate ) && !in_array( $name, $fieldsToUpdate ) )
+			{
 				continue;
+			}
 
 			if( property_exists( $name_class, $name ) )
 			{
@@ -821,11 +830,12 @@ class DBTable
 					}
 				}
 
-
 				if( ($attr_flags & DBTable::IGNORE_ON_UPDATE) != 0 )
+				{
 					continue;
+				}
 
-				if( $this->{$name} === 'NULL' )
+				if( $this->{$name} === 'NULL' || $this->{$name} === NULL )
 				{
 					$update_array[]		= '`'.$name.'`=NULL';
 				}
@@ -866,12 +876,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[0];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$_array = array();
@@ -932,12 +937,7 @@ class DBTable
 		if( $num_args )
 		{
 			$arg_list	= func_get_args();
-			$indexes	= $arg_list;
-
-			if( is_array( $arg_list[ 0 ] ) )
-			{
-				$indexes	= $arg_list[ 0 ];
-			}
+			$indexes = is_array( $arg_list[ 0 ] ) ? $arg_list[0] : $arg_list;
 		}
 
 		$_array = array();
@@ -1016,29 +1016,16 @@ class DBTable
 
 	function assignFromArrayExcluding()
 	{
-		$num_args	= func_num_args();
-		$indexes	= array();
-		$array		= func_get_arg( 0 );
+		$args = func_get_args();
+		$args 		= ArrayUtils::getArguments(...$args);
 
-		if( empty($num_args) || !is_array( $array ) )
+		$array		= $args['object'];
+		$indexes	= $args['arguments'];
+
+		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
 
-		if( $num_args > 1 )
-		{
-			if( is_array( func_get_arg( 1 ) ) )
-			{
-				$indexes = func_get_arg( 1 );
-			}
-			else
-			{
-				for($i=1;$i<$num_args;$i++)
-				{
-					$indexes[] = func_get_arg( $i );
-				}
-			}
-		}
-
-		$class_name	 = get_class($this);
+		$class_name	= get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value)
 		{
@@ -1256,10 +1243,9 @@ class DBTable
 	{
 
 		$res	= self::$connection->query( 'SHOW TABLES' );
-		$tables = array();
 
-		$phpCode = $namespace ? "namespace $namespace;\n": '';
-		$phpCode.= 'use \akou\DBTable;';
+		$phpCode = $namespace ? "namespace $namespace;".PHP_EOL : '';
+		$phpCode.= 'use \akou\DBTable;'.PHP_EOL;
 
 		while( $row = $res->fetch_row()  )
 		{
@@ -1290,7 +1276,7 @@ class DBTable
 		}
 
 		$stmt->close();
-	 */
+	*/
 	public static function getStmtBindResult( $query,&$row,$mysqli=NULL )
 	{
 		$conn			= $mysqli ?: self::$connection;
@@ -1317,7 +1303,6 @@ class DBTable
 	{
 		$conn			= $mysqli ?: self::$connection;
 		$addHeader		= is_array( $row_header );
-		$size			= 0;
 
 		if( $stmt = $conn->prepare( $query ))
 		{
@@ -1355,28 +1340,14 @@ class DBTable
 
 	public static function getSearchFirstSql($searchKeys, $for_update = false )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
-
-		foreach( $searchKeys as $key=>$value )
-		{
-			if( !in_array( $key, $properties ) )
-				continue;
-
-			$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
-		}
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str. ' LIMIT 1' ;
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
-
-		return $sql;
+		return static::getSearchSql( $searchKeys, $for_update, 1);
 	}
 
 	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
 	{
-		$sql	= static::getSearchFirstSql($searchKeys, $for_update );
+		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
+
+		error_log( $sql );
 
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
@@ -1384,33 +1355,129 @@ class DBTable
 		return NULL;
 	}
 
-	public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	static function endsWith( $haystack, $needle )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
+		$length = strlen( $needle );
+		if( !$length ) {
+			return true;
+		}
+		return substr( $haystack, -$length ) === $needle;
+	}
 
-		foreach( $searchKeys as $key=>$value )
+	/*
+	*   searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	*/
+	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE)
+	{
+		$properties = static::getAllProperties();
+		$props = array
+		(
+			DBTABLE::LT_SYMBOL,
+			DBTABLE::LE_SYMBOL,
+			DBTABLE::GE_SYMBOL,
+			DBTABLE::GT_SYMBOL,
+			DBTABLE::LIKE_SYMBOL,
+			DBTable::STARTS_WITH_SYMBOL,
+			DBTable::ENDS_WITH_SYMBOL,
+			DBTABLE::NOT_NULL_SYMBOL,
+			DBTABLE::NULL_SYMBOL,
+		);
+
+		$comparison_keys = array_keys( $array );
+
+		$constraints = array();
+
+		foreach($comparison_keys as $key )
 		{
-			if( !in_array( $key, $properties ) )
-				continue;
-
-			if( is_array( $value ) )
+			//Comparing with regular equal or in array
+			if( in_array( $key, $properties ) )
 			{
-				if( count( $value ) )
+
+				$value = $array[ $key ];
+
+				if( is_array( $array[ $key ] ) )
 				{
-					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+					if( count( $value ) )
+					{
+						$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+					}
+					else
+					{
+						//Is set but is empty is searching elements but are empty so none record must match
+						$constraints[] = '1>2';
+						break;
+					}
+				}
+				else
+				{
+					$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+				}
+			} //Comparing with the dirty comparisons ,LIKE not null,etc.
+			elseif( in_array($key, $props) )
+			{
+				if( static::endsWith(DBTable::LIKE_SYMBOL, $key  ) )
+				{
+					$f_key = str_replace(DBTable::LIKE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::STARTS_WITH_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::STARTS_WITH_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::ENDS_WITH_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::ENDS_WITH_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::LT_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::LT_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` < "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::LE_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::LE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` <= "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::GE_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::GE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` >= "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::GT_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::GT_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` > "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[$key] )
+				{
+					$f_key = str_replace(DBTable::NULL_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[$key] )
+				{
+					$f_key = str_replace(DBTable::NOT_NULL_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` IS NOT NULL';
 				}
 			}
 			else
 			{
-				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+				error_log('Key "'.$key.'" is not a comparison property');
 			}
 		}
+
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
 		if( $for_update )
 			$sql .= ' FOR UPDATE ';
+
+		if( $limit && is_int( $limit) )
+			$sql .= ' LIMIT '.intval($limit).' ';
 
 		return $sql;
 	}
@@ -1426,31 +1493,7 @@ class DBTable
 
 	public static function searchGroupByIndex($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
-
-		foreach( $searchKeys as $key=>$value )
-		{
-			if( !in_array( $key, $properties ) )
-				return array();
-
-			if( is_array( $value ) )
-			{
-				if( count( $value ) )
-				{
-					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
-				}	
-			}
-			else
-			{
-				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
-			}
-		}
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
+		$sql = static::getSearchSql( $searchKeys, $for_update );
 
 		return $as_objects
 			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
@@ -1492,5 +1535,15 @@ class DBTable
 				unset( $this->{ $name } );
 			}
 		}
+	}
+
+	public function getErrorNumber()
+	{
+		return $this->_conn->errno;
+	}
+
+	public function getError()
+	{
+		return $this->_conn->error;
 	}
 }

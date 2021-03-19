@@ -95,16 +95,18 @@ class LoggableException extends \Exception
 				for( $i = 0; $i < count( $arreglo ); $i++ )
 				{
 					$subArreglo = $arreglo[  $i  ];
+					if( strpos( $subArreglo[ 'file'], 'LoggableException.php' ) !== false )
+						continue;
+
 					$datosTmp	= ''
 						. '-[ FILE: ' . $subArreglo[  'file'  ] . ' // '
 						. 'LINE: '
 						.$subArreglo[  'line'  ]
 						.' // '
 						. 'FUNCTION: '
-						.$subArreglo[  'function'  ]
-						.' // '
-						. 'ARGS: '
-						.print_r( $subArreglo[  'args'  ], true )
+						.$subArreglo[  'function'  ].PHP_EOL
+						//.' // '
+						//. 'ARGS: ' .print_r( $subArreglo[  'args'  ], true )
 						. ' ]	-' .
 					'';
 
@@ -128,6 +130,24 @@ class ValidationException extends LoggableException
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
+	protected function addLog( $message )
+	{
+		Utils::addLog
+		(
+			Utils::LOG_LEVEL_WARN
+			,'LOG_WARN'
+			,$message
+		);
+	}
+}
+
+class ForbidenException extends LoggableException
+{
+	public function __construct( $message, $tecnical_message = '', $code = 403 , Exception $previous = null)
+	{
+		parent::__construct($message, $tecnical_message, $code, $previous);
+	}
+
 	protected function addLog( $message )
 	{
 		Utils::addLog
