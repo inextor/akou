@@ -228,10 +228,10 @@ class DBTable
 		return $properties;
 	}
 
-	public static function getTotalRows($conn = NULL)
+	public static function getTotalRows($conn = NULL )
 	{
 		$mysqli		= empty( $conn ) ? self::$connection : $conn;
-		$resTotal	= $mysqli->query('SELECT FOUND_ROWS()');
+		$resTotal	= $mysqli->query( 'SELECT FOUND_ROWS()' );
 
 		if( !$resTotal )
 			throw new SystemException
@@ -261,7 +261,7 @@ class DBTable
 			self::$_attrFlags = $array;
 	}
 
-	public static function getArrayFromQueryGroupByIndex($query,$index,$connection=NULL)
+	public static function getArrayFromQueryGroupByIndex($query,$index,$connection=NULL )
 	{
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -312,7 +312,7 @@ class DBTable
 	static function getRowWithDataTypes($row,$fields_info )
 	{
 		$result = array();
-		foreach($fields_info as $name=>$type)
+		foreach( $fields_info as $name=>$type )
 		{
 			if( !isset( $row[ $name ] ) || $row[ $name ] === null )
 			{
@@ -348,7 +348,7 @@ class DBTable
 	 * $dictionary_index the index dictionary example dictionary by id
 	 * if false return a simple array
 	 */
-	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
+	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL )
 	{
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -398,7 +398,7 @@ class DBTable
 	}
 
 
-	public static function createFromQuery( $query, $connection = NULL)
+	public static function createFromQuery( $query, $connection = NULL )
 	{
 		$conn = $connection ?: self::$connection;
 
@@ -418,7 +418,7 @@ class DBTable
 		return FALSE;
 	}
 
-	public static function createFromUniqArray($array,$asTableName=null)
+	public static function createFromUniqArray($array,$asTableName=null )
 	{
 
 		$_obj = new static();
@@ -433,7 +433,7 @@ class DBTable
 		$c			= 0;
 		$obj		= $this;
 
-		foreach ($obj as $name => $value)
+		foreach ($obj as $name => $value )
 		{
 			if( in_array($name , DBTable::$_control_variable_names ) )
 				continue;
@@ -447,14 +447,14 @@ class DBTable
 		$obj->setWhereString();
 	}
 
-	public static function getUniqSelect($asTableName=null)
+	public static function getUniqSelect($asTableName=null )
 	{
 		$fields		= array();
 		$c				= 0;
 		$_clas_name	= $asTableName == null ? self::getBaseClassName() : $asTableName;
 		$obj			= new static();
 
-		foreach ($obj as $name => $value)
+		foreach ($obj as $name => $value )
 		{
 			if( in_array( $name , DBTable::$_control_variable_names ) )
 				continue;
@@ -474,13 +474,13 @@ class DBTable
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
-		if( $only_id && property_exists($name_class,'id') && isset( $this->id ))
+		if( $only_id && property_exists( $name_class, 'id' ) && isset( $this->id ) )
 		{
 			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
 			return;
 		}
 
-		foreach ($this as $name => $value)
+		foreach ($this as $name => $value )
 		{
 			if( in_array( $name , DBTable::$_control_variable_names ) )
 				continue;
@@ -502,12 +502,12 @@ class DBTable
 
 		$name_class= get_class($this);
 
-		foreach ($this as $name => $value)
+		foreach ($this as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
-			if( property_exists($name_class,$name) && isset($this->{$name}) )
+			if( property_exists( $name_class, $name ) && isset( $this->{$name} ) )
 			{
 				if( !empty( $value )	)
 				{
@@ -540,7 +540,7 @@ class DBTable
 
 		$class_name		= get_class($this);
 		$i				= 0;
-		foreach( $this as $name => $value)
+		foreach( $this as $name => $value )
 		{
 			if(
 				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
@@ -576,7 +576,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function createFromArray($array, $connection=NULL)
+	public static function createFromArray($array, $connection=NULL )
 	{
 		$_obj = new static($connection);
 		$_obj->assignFromArray( $array );
@@ -596,7 +596,7 @@ class DBTable
 		$result			= $this->_conn->query( $this->_lastQuery );
 		$class_name		= get_class( $this );
 
-		if($result && property_exists($class_name,'id') && empty( $this->id ) )
+		if($result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
 			$this->id = $this->_conn->insert_id;
 		}
@@ -607,13 +607,13 @@ class DBTable
 		{
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
 
-			if( strpos( $this->_conn->error,'column') !== FALSE )
+			if( strpos( $this->_conn->error, 'column' ) !== FALSE )
 			{
 				error_log( $this->_conn->error );
-				$firstIndex	= strpos( $this->_conn->error,'\'')+1;
-				$lastIndex	= strrpos( $this->_conn->error,'\'');
+				$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
+				$lastIndex	= strrpos( $this->_conn->error,'\'' );
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
-				error_log('Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<');
+				error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
 			}
 			else
 			{
@@ -624,14 +624,14 @@ class DBTable
 		return $result;
 	}
 
-	function getInsertSql($ignore = FALSE)
+	function getInsertSql($ignore = FALSE )
 	{
 		$array_fields	= array();
 		$array_values	= array();
 		$class_name		= get_class($this);
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($this as $name => $value)
+		foreach ($this as $name => $value )
 		{
 			if( property_exists($class_name,$name))
 			{
@@ -662,7 +662,7 @@ class DBTable
 				/* HAS PRECENDENCE OVER IGNORE_ON_INSERT */
 				if( ( $attr_flags & DBTable::TIMESTAMP_ON_CREATE ) != 0 )
 				{
-					$this->{$name}	= date('Y-m-d H:i:s');
+					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
 					$array_fields[] = '`'.$name.'`';
 					continue;
@@ -721,9 +721,9 @@ class DBTable
 				{
 					$array_values[] = ' NULL ';
 				}
-				else if( $value === 'CURRENT_TIMESTAMP')
+				else if( $value === 'CURRENT_TIMESTAMP' )
 				{
-					$this->{$name}	= date('Y-m-d H:i:s');
+					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
 				}
 				else if( $value	=== '' )
@@ -744,9 +744,9 @@ class DBTable
 			}
 		}
 
-		$sql_insert_fields = implode( ',',$array_fields);
-		$sql_insert_values = implode( ',',$array_values);
-		$sql_insert_string = 'INSERT'.($ignore ? ' IGNORE ' :' ').'INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
+		$sql_insert_fields = implode( ',', $array_fields );
+		$sql_insert_values = implode( ',', $array_values );
+		$sql_insert_string = 'INSERT'.( $ignore ? ' IGNORE ' :' ' ).'INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
 			VALUES ( '.$sql_insert_values.' )';
 
 		return $sql_insert_string;
@@ -799,7 +799,7 @@ class DBTable
 		$name_class		= get_class( $this );
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($_tmp as $name => $value)
+		foreach ($_tmp as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) || ( !isset( $this->{$name} ) && !is_null( $this->{$name} ) ) )
 			{
@@ -842,9 +842,9 @@ class DBTable
 				{
 					$update_array[]		= '`'.$name.'`= ""';
 				}
-				else if( $value === 'CURRENT_TIMESTAMP')
+				else if( $value === 'CURRENT_TIMESTAMP' )
 				{
-					$this->{$name}		= date('Y-m-d H:i:s');
+					$this->{$name}		= date('Y-m-d H:i:s' );
 					$update_array[]		= '`'.$name.'`="'.$this->{$name}.'"';
 				}
 				else
@@ -883,7 +883,7 @@ class DBTable
 
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($obj as $name => $value)
+		foreach ($obj as $name => $value )
 		{
 			if( in_array( $name,DBTable::$_control_variable_names ) )
 				continue;
@@ -919,7 +919,7 @@ class DBTable
 		$class_name	= get_called_class();
 		$vars		= get_class_vars( $class_name );
 
-		foreach( DBTable::$_control_variable_names as $value)
+		foreach( DBTable::$_control_variable_names as $value )
 		{
 			if( isset( $vars[ $value ] ) )
 				unset( $vars[ $value ] );
@@ -944,7 +944,7 @@ class DBTable
 
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($obj as $name => $value)
+		foreach ($obj as $name => $value )
 		{
 			if( in_array( $name ,DBTable::$_control_variable_names ) )
 				continue;
@@ -1026,7 +1026,7 @@ class DBTable
 
 		$class_name	= get_class($this);
 		$i				= 0;
-		foreach( $this as $name => $value)
+		foreach( $this as $name => $value )
 		{
 
 			if(
@@ -1087,11 +1087,11 @@ class DBTable
 
 			if( is_array( $arrayFlags[ $key ] ) )
 			{
-				if( !empty(	$arrayFlags[$key]['flags'] ))
-					$attr_flags = $arrayFlags[$key]['flags'];
+				if( !empty(	$arrayFlags[ $key ]['flags'] ))
+					$attr_flags = $arrayFlags[ $key ]['flags'];
 
-				if( !empty( $arrayFlags[$key] ) )
-					$params	= $arrayFlags[$key];
+				if( !empty( $arrayFlags[ $key ] ) )
+					$params	= $arrayFlags[ $key ];
 			}
 			else
 			{
@@ -1126,7 +1126,7 @@ class DBTable
 		{
 			if( ! ctype_digit( (string)$this->{$key} ) )
 			{
-				throw new ValidationException($altMessage.$key.' is not a valid number ');
+				throw new ValidationException( $altMessage.$key.' is not a valid number ' );
 			}
 
 			if( !empty( $params['min'] ) && intval( $this->{$key} ) < intval( $params['min'] ) )
@@ -1166,7 +1166,7 @@ class DBTable
 		{
 			if( !is_numeric( $this->{$key} ) )
 			{
-				throw new ValidationException($altMessage.' '.$key.'"'.$this->{$key}.'" is not a valid float number');
+				throw new ValidationException( $altMessage.' '.$key.'"'.$this->{$key}.'" is not a valid float number' );
 			}
 		}
 		elseif( ( DBTable::PHONE_VALUE & $flags ) != 0 )
@@ -1175,14 +1175,14 @@ class DBTable
 
 			if( preg_match_all( '/[0-9]/', $this->{$key}, $tmp ) < 10 )
 			{
-				throw new ValidationException($altMessage.$key.' "'.$this->{$key}.'" is not a valid phone number');
+				throw new ValidationException( $altMessage.$key.' "'.$this->{$key}.'" is not a valid phone number' );
 			}
 		}
 		elseif( ( DBTable::EMAIL_VALUE & $flags ) != 0 )
 		{
-			if (!filter_var($this->{$key}, FILTER_VALIDATE_EMAIL) === false)
+			if (!filter_var($this->{$key}, FILTER_VALIDATE_EMAIL) === false )
 			{
-				throw new ValidationException($altMessage.$key.' "'.$this->{$key}.'" is not a valid email');
+				throw new ValidationException( $altMessage.$key.' "'.$this->{$key}.'" is not a valid email' );
 			}
 		}
 		elseif( ( DBTable::DOMAIN_VALUE & $flags ) != 0 )
@@ -1204,7 +1204,7 @@ class DBTable
 			{
 				if(	strtotime( $this->{$key})===FALSE )
 				{
-					throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
+					throw new ValidationException( $altMessage.$key.'"'.$this->{$key}.'" is not a valid date time' );
 				}
 			}
 		}
@@ -1212,18 +1212,18 @@ class DBTable
 		{
 			if( !preg_match("/^\d{4}-\d{2}-\d{2}$/",$this->{$key}))
 			{
-				if(	strtotime( $this->{$key})===FALSE )
+				if(	strtotime( $this->{$key} )===FALSE )
 				{
-					throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid date time');
+					throw new ValidationException( $altMessage.$key.'"'.$this->{$key}.'" is not a valid date time' );
 				}
 			}
 		}
 		elseif( ( DBTable::TIME_VALUE ) & $flags != 0 )
 		{
 
-			if( !preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $this->{$key}) )
+			if( !preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $this->{$key} ) )
 			{
-				throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid time value');
+				throw new ValidationException($altMessage.$key.'"'.$this->{$key}.'" is not a valid time value' );
 			}
 		}
 		elseif( ( DBTable::ENUM_VALUE & $flags ) != 0 )
@@ -1232,13 +1232,13 @@ class DBTable
 			{
 				throw new ValidationException
 				(
-					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'],true)
+					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'],true )
 				);
 			}
 		}
 	}
 
-	public static function importDbSchema( $namespace = '')
+	public static function importDbSchema( $namespace = '' )
 	{
 
 		$res	= self::$connection->query( 'SHOW TABLES' );
@@ -1251,7 +1251,7 @@ class DBTable
 			$tableName	= $row[ 0 ];
 			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable'.PHP_EOL.'{'.PHP_EOL;
 
-			$fieldsRes	= self::query( 'describe `'.self::$connection->real_escape_string( $tableName ).'`');
+			$fieldsRes	= self::query( 'describe `'.self::$connection->real_escape_string( $tableName ).'`' );
 
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
@@ -1291,7 +1291,7 @@ class DBTable
 				$params[]				= &$row[ $field->name ];
 			}
 
-			call_user_func_array(array($stmt, 'bind_result'), $params);
+			call_user_func_array(array($stmt, 'bind_result' ), $params );
 			return $stmt;
 		}
 
@@ -1319,14 +1319,14 @@ class DBTable
 				$i++;
 			}
 			//$stmt->bind_result( $row );
-			call_user_func_array(array($stmt, 'bind_result'), $params );
+			call_user_func_array(array($stmt, 'bind_result' ), $params );
 			return $stmt;
 		}
 
 		return FALSE;
 	}
 
-	public static function get($id, $for_update = FALSE)
+	public static function get($id, $for_update = FALSE )
 	{
 		$obj = new static();
 		$obj->id = $id;
@@ -1339,7 +1339,7 @@ class DBTable
 
 	public static function getSearchFirstSql($searchKeys, $for_update = false )
 	{
-		return static::getSearchSql( $searchKeys, $for_update, 1);
+		return static::getSearchSql( $searchKeys, $for_update, 1 );
 	}
 
 	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
@@ -1369,7 +1369,7 @@ class DBTable
 		 public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 			 public static function getSearchSql( $searchKeys, $for_update = FALSE )
 	 */
-	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE)
+	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE )
 	{
 		$properties = static::getAllProperties();
 		$props = array
@@ -1415,51 +1415,51 @@ class DBTable
 					$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
 				}
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
-			elseif( in_array($key, $props) )
+			elseif( in_array( $key, $props ) )
 			{
-				if( static::endsWith(DBTable::LIKE_SYMBOL, $key ) )
+				if( static::endsWith( DBTable::LIKE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::LIKE_SYMBOL,"",$key);
-					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::LIKE_SYMBOL,"", $key );
+					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape( $array[$key] ).'%"';
 				}
 				else if( static::endsWith( DBTable::STARTS_WITH_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::STARTS_WITH_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::STARTS_WITH_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
 				}
 				else if( static::endsWith( DBTable::ENDS_WITH_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::ENDS_WITH_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::ENDS_WITH_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
 				}
 				else if( static::endsWith( DBTable::LT_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::LT_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::LT_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` < "'.static::escape($array[$key]).'%"';
 				}
 				elseif( static::endsWith( DBTable::LE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::LE_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::LE_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` <= "'.static::escape($array[$key]).'%"';
 				}
 				elseif( static::endsWith( DBTable::GE_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::GE_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::GE_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` >= "'.static::escape($array[$key]).'%"';
 				}
 				elseif( static::endsWith( DBTable::GT_SYMBOL, $key ) )
 				{
-					$f_key = str_replace(DBTable::GT_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::GT_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` > "'.static::escape($array[$key]).'%"';
 				}
 				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[$key] )
 				{
-					$f_key = str_replace(DBTable::NULL_SYMBOL,"",$key);
-					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape($array[$key]).'%"';
+					$f_key = str_replace( DBTable::NULL_SYMBOL,"", $key );
+					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape($array[ $key ]).'%"';
 				}
-				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[$key] )
+				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[ $key ] )
 				{
-					$f_key = str_replace(DBTable::NOT_NULL_SYMBOL,"",$key);
+					$f_key = str_replace( DBTable::NOT_NULL_SYMBOL,"", $key );
 					$constraints[] = '`'.$f_key.'` IS NOT NULL';
 				}
 			}
@@ -1509,7 +1509,7 @@ class DBTable
 		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
 		$unsetInvalidDates = ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0 ;
 
-		foreach ($obj as $name => $value)
+		foreach ($obj as $name => $value )
 		{
 			if( in_array($name , DBTable::$_control_variable_names ) )
 				continue;
