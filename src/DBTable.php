@@ -105,7 +105,7 @@ class DBTable
 230 = 1073741824
 231 = 2147483648
 232 = 4294967296
- */
+	*/
 
 	var $_sqlCmp='';
 	var $_lastQuery;
@@ -196,7 +196,7 @@ class DBTable
 		if( $row === NULL )
 			return NULL;
 
-		$rowData = DBTable::getRowWithDataTypes($row,$fields_info );
+		$rowData = DBTable::getRowWithDataTypes( $row, $fields_info );
 		$keys = array_keys( $rowData );
 		return $rowData[ $keys[0] ];
 	}
@@ -220,15 +220,15 @@ class DBTable
 		$obj = new static();
 		$merged = array_merge( DBTable::$_control_variable_names, $indexes );
 		$properties = array();
-		foreach($obj as $i=>$value )
+		foreach( $obj as $i=>$value )
 		{
-			if( !in_array($i, $merged) )
+			if( !in_array( $i, $merged ) )
 				$properties[] = $i;
 		}
 		return $properties;
 	}
 
-	public static function getTotalRows($conn = NULL )
+	public static function getTotalRows( $conn = NULL )
 	{
 		$mysqli		= empty( $conn ) ? self::$connection : $conn;
 		$resTotal	= $mysqli->query( 'SELECT FOUND_ROWS()' );
@@ -236,8 +236,8 @@ class DBTable
 		if( !$resTotal )
 			throw new SystemException
 			(
-				'An error occurred please try again later'
-				,'Make sure SQL_CALC_FOUND_ROWS was added to the previous query'
+				'An error occurred please try again later',
+				'Make sure SQL_CALC_FOUND_ROWS was added to the previous query'
 			);
 
 		$totalRow	= $resTotal->fetch_row();
@@ -251,8 +251,8 @@ class DBTable
 
 	public static function getBaseClassName()
 	{
-		$class = explode('\\', get_called_class());
-		return array_pop($class);
+		$class = explode( '\\', get_called_class() );
+		return array_pop( $class );
 	}
 
 	public static function setAttrFlags( $array=array() )
@@ -345,9 +345,9 @@ class DBTable
 	}
 
 	/*
-	 * $dictionary_index the index dictionary example dictionary by id
-	 * if false return a simple array
-	 */
+	* $dictionary_index the index dictionary example dictionary by id
+	* if false return a simple array
+	*/
 	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL )
 	{
 		$className	= static::getBaseClassName();
@@ -519,18 +519,18 @@ class DBTable
 	}
 
 	/*
-	 *	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
-	 *		example
-	 //only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
-	 $booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
+	*	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
+	*		example
+	//only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
+	$booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
 	//Assign all the values from $_POST
 	$booking->assignFromArray( $_POST );
-	 */
+	*/
 
 	function assignFromArray()
 	{
-		$args = func_get_args();
-		$args 		= ArrayUtils::getArguments(...$args);
+		$args		= func_get_args();
+		$args		= ArrayUtils::getArguments(...$args);
 
 		$array		= $args['object'];
 		$indexes	= $args['arguments'];
@@ -672,9 +672,9 @@ class DBTable
 				{
 					Utils::addLog
 					(
-						Utils::LOG_LEVEL_PARANOID
-						,'DBTable'
-						,'IGNORE Because is IGNORE ON INSERT '.self::getBaseClassName().'->'.$name
+						Utils::LOG_LEVEL_PARANOID,
+						'DBTable',
+						'IGNORE Because is IGNORE ON INSERT '.self::getBaseClassName().'->'.$name
 					);
 					continue;
 				}
@@ -691,9 +691,9 @@ class DBTable
 					{
 						Utils::addLog
 						(
-							Utils::LOG_LEVEL_PARANOID
-							,'DBTable'
-							,'IGNORE Because is empty '.self::getBaseClassName().'->'.$name
+							Utils::LOG_LEVEL_PARANOID,
+							'DBTable',
+							'IGNORE Because is empty '.self::getBaseClassName().'->'.$name
 						);
 					}
 					continue;
@@ -1015,8 +1015,8 @@ class DBTable
 
 	function assignFromArrayExcluding()
 	{
-		$args = func_get_args();
-		$args 		= ArrayUtils::getArguments(...$args);
+		$args		= func_get_args();
+		$args		= ArrayUtils::getArguments(...$args);
 
 		$array		= $args[ 'object' ];
 		$indexes	= $args[ 'arguments' ];
@@ -1075,8 +1075,8 @@ class DBTable
 			{
 				throw new SystemException
 				(
-					$altMessage.'System Error '
-					,'There is no property key "'.$key.'" in table '.$class_name.' report to developer inmediately '
+					$altMessage.'System Error ',
+					'There is no property key "'.$key.'" in table '.$class_name.' report to developer inmediately '
 				);
 			}
 
@@ -1107,8 +1107,8 @@ class DBTable
 				if( ($attr_flags & $required_on_save) )
 					throw new ValidationException
 					(
-						$altMessage.$key.' cant be empty '
-						,'Automatic field validation'
+						$altMessage.$key.' cant be empty ',
+						'Automatic field validation'
 					);
 			}
 			else
@@ -1364,11 +1364,11 @@ class DBTable
 	}
 
 	/*
-	 *	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
-	 *
-		 public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
-			 public static function getSearchSql( $searchKeys, $for_update = FALSE )
-	 */
+	*	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+		public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	*/
 	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE )
 	{
 		$properties = static::getAllProperties();
