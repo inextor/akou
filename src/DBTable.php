@@ -10,7 +10,7 @@ class DBTable
 	public static $connection	= NULL;
 	public static $_attrFlags	= array();
 	public static $_parse_data_types = true;
-	static $_control_variable_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
+	static $_control_variable_names = array( '_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
 
 	const STARTS_WITH_SYMBOL='^';
 	const ENDS_WITH_SYMBOL='$';
@@ -112,9 +112,9 @@ class DBTable
 	var $_conn;
 	var $_is_duplicated_error=false;
 
-	public static function init($host, $user, $password ,$db)
+	public static function init( $host, $user, $password ,$db)
 	{
-		$mysqli = new \mysqli($host, $user, $password, $db );
+		$mysqli = new \mysqli( $host, $user, $password, $db );
 
 		if( $mysqli->connect_errno )
 		{
@@ -122,8 +122,8 @@ class DBTable
 			exit();
 		}
 
-		$mysqli->query("SET NAMES 'utf8'");
-		$mysqli->set_charset('utf8');
+		$mysqli->query( "SET NAMES 'utf8'");
+		$mysqli->set_charset( 'utf8');
 
 		DBTable::$connection				= $mysqli;
 	}
@@ -144,14 +144,14 @@ class DBTable
 		self::$connection->autocommit( $autocommit );
 	}
 
-	public static function commit($flags=0, $name=NULL)
+	public static function commit( $flags=0, $name=NULL)
 	{
 		return self::$connection->commit( $flags=0,$name);
 	}
 
 	public static function rollback( $flags=0,$name =NULL)
 	{
-		error_log('Rolling back');
+		error_log( 'Rolling back');
 		self::$connection->rollback( $flags, $name );
 	}
 
@@ -183,14 +183,14 @@ class DBTable
 		return '"'.implode( '","', $escapedValues ).'"';
 	}
 
-	public static function getValueFromQuery($sql)
+	public static function getValueFromQuery( $sql )
 	{
-		$result = DBTable::$connection->query($sql);
+		$result = DBTable::$connection->query( $sql );
 
 		if( !$result )
 			return NULL;
 
-		$fields_info = DBTable::getFieldsInfo($result);
+		$fields_info = DBTable::getFieldsInfo( $result );
 
 		$row	= $result->fetch_assoc();
 		if( $row === NULL )
@@ -298,7 +298,7 @@ class DBTable
 		return $result;
 	}
 
-	public static function getFieldsInfo($result)
+	public static function getFieldsInfo( $result )
 	{
 		$finfo = $result->fetch_fields();
 		$field_info = array();
@@ -991,8 +991,8 @@ class DBTable
 			{
 				if( DBTable::$_parse_data_types || $with_data_types )
 				{
-					$fields_info = static::getFieldsInfo($result);
-					$this->assignFromArray( static::getRowWithDataTypes($row,$fields_info) );
+					$fields_info = static::getFieldsInfo( $result );
+					$this->assignFromArray( static::getRowWithDataTypes( $row, $fields_info ) );
 				}
 				else
 				{
