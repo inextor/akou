@@ -168,7 +168,7 @@ class DBTable
 		return self::escapeArrayValues( $array );
 	}
 
-	static function escapeArrayValues( $array, $mysqli = NULL  )
+	static function escapeArrayValues( $array, $mysqli = NULL )
 	{
 		if( count( $array ) === 0 ) return "";
 
@@ -375,11 +375,11 @@ class DBTable
 				if( $dictionary_index )
 				{
 					if( !empty( $row[ $dictionary_index ] ) )
-						$result[ $row[ $dictionary_index ] ] =  $row;
+						$result[ $row[ $dictionary_index ] ] = $row;
 				}
 				else
 				{
-					$result[] =  $row;
+					$result[] = $row;
 				}
 			}
 			else
@@ -597,7 +597,7 @@ class DBTable
 		$result			= $this->_conn->query( $this->_lastQuery );
 		$class_name		= get_class( $this );
 
-		if($result && property_exists($class_name,'id') && empty( $this->id )  )
+		if($result && property_exists($class_name,'id') && empty( $this->id ) )
 		{
 			$this->id = $this->_conn->insert_id;
 		}
@@ -1138,7 +1138,7 @@ class DBTable
 				);
 			}
 
-			if( !empty( $params['max'] ) &&  intval( $this->{$key} ) > intval( $params['max'] ) )
+			if( !empty( $params['max'] ) && intval( $this->{$key} ) > intval( $params['max'] ) )
 			{
 				throw new ValidationException
 				(
@@ -1247,7 +1247,7 @@ class DBTable
 		$phpCode = $namespace ? "namespace $namespace;".PHP_EOL : '';
 		$phpCode.= 'use \akou\DBTable;'.PHP_EOL;
 
-		while( $row = $res->fetch_row()  )
+		while( $row = $res->fetch_row() )
 		{
 			$tableName	= $row[ 0 ];
 			$phpCode	.= 'class '.$tableName.' extends \akou\DBTable'.PHP_EOL.'{'.PHP_EOL;
@@ -1365,7 +1365,7 @@ class DBTable
 	}
 
 	/*
-	*   searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
 	*
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	public static function getSearchSql( $searchKeys, $for_update = FALSE )
@@ -1418,7 +1418,7 @@ class DBTable
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
 			elseif( in_array($key, $props) )
 			{
-				if( static::endsWith(DBTable::LIKE_SYMBOL, $key  ) )
+				if( static::endsWith(DBTable::LIKE_SYMBOL, $key ) )
 				{
 					$f_key = str_replace(DBTable::LIKE_SYMBOL,"",$key);
 					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape($array[$key]).'%"';
@@ -1530,7 +1530,7 @@ class DBTable
 
 				unset( $this->{ $name } );
 			}
-			else if( $unsetInvalidDates &&  $trimValue === '0000-00-00 00:00:00' )
+			else if( $unsetInvalidDates && $trimValue === '0000-00-00 00:00:00' )
 			{
 				unset( $this->{ $name } );
 			}
