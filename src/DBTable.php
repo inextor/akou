@@ -12,6 +12,18 @@ class DBTable
 	public static $_parse_data_types = true;
 	static $_control_variable_names = array('_sqlCmp','_lastQuery','_attrFlags','_conn','_is_duplicated_error');
 
+	const STARTS_WITH_SYMBOL='^';
+	const ENDS_WITH_SYMBOL='$';
+	const LIKE_SYMBOL='~~';
+	const CSV_SYMBOL=',';
+	const LT_SYMBOL='<';
+	const LE_SYMBOL='<~=';
+	const GE_SYMBOL='>~=';
+	const EQ_SYMBOL='';
+	const GT_SYMBOL='>';
+	const NOT_NULL_SYMBOL = '@';
+	const NULL_SYMBOL = '_NULL';
+
 
 	const UNSET_TRIMED_VALUES	= 1;
 	const UNSET_ZEROS			= 2;
@@ -1328,43 +1340,14 @@ class DBTable
 
 	public static function getSearchFirstSql($searchKeys, $for_update = false )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
-
-		foreach( $searchKeys as $key=>$value )
-		{
-			if( !in_array( $key, $properties ) )
-				continue;
-
-			if( is_array( $value ) )
-			{
-				if( count( $value ) )
-				{
-					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
-				}
-				else{
-					//Is set but is empty is searching elements but are empty so none record must match
-					$constraints[] = '1>2';
-				}
-			}
-			else
-			{
-				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
-			}
-		}
-
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str. ' LIMIT 1' ;
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
-
-		return $sql;
+		return static::getSearchSql( $searchKeys, $for_update, 1);
 	}
 
 	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
 	{
-		$sql	= static::getSearchFirstSql($searchKeys, $for_update );
+		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
+
+		error_log( $sql );
 
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
@@ -1372,37 +1355,129 @@ class DBTable
 		return NULL;
 	}
 
-	public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	static function endsWith( $haystack, $needle )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
+		$length = strlen( $needle );
+		if( !$length ) {
+			return true;
+		}
+		return substr( $haystack, -$length ) === $needle;
+	}
 
-		foreach( $searchKeys as $key=>$value )
+	/*
+	*   searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	*/
+	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE)
+	{
+		$properties = static::getAllProperties();
+		$props = array
+		(
+			DBTABLE::LT_SYMBOL,
+			DBTABLE::LE_SYMBOL,
+			DBTABLE::GE_SYMBOL,
+			DBTABLE::GT_SYMBOL,
+			DBTABLE::LIKE_SYMBOL,
+			DBTable::STARTS_WITH_SYMBOL,
+			DBTable::ENDS_WITH_SYMBOL,
+			DBTABLE::NOT_NULL_SYMBOL,
+			DBTABLE::NULL_SYMBOL,
+		);
+
+		$comparison_keys = array_keys( $array );
+
+		$constraints = array();
+
+		foreach($comparison_keys as $key )
 		{
-			if( !in_array( $key, $properties ) )
-				continue;
-
-			if( is_array( $value ) )
+			//Comparing with regular equal or in array
+			if( in_array( $key, $properties ) )
 			{
-				if( count( $value ) )
+
+				$value = $array[ $key ];
+
+				if( is_array( $array[ $key ] ) )
 				{
-					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+					if( count( $value ) )
+					{
+						$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+					}
+					else
+					{
+						//Is set but is empty is searching elements but are empty so none record must match
+						$constraints[] = '1>2';
+						break;
+					}
 				}
-				else{
-					//Is set but is empty is searching elements but are empty so none record must match
-					$constraints[] = '1>2';
+				else
+				{
+					$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+				}
+			} //Comparing with the dirty comparisons ,LIKE not null,etc.
+			elseif( in_array($key, $props) )
+			{
+				if( static::endsWith(DBTable::LIKE_SYMBOL, $key  ) )
+				{
+					$f_key = str_replace(DBTable::LIKE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::STARTS_WITH_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::STARTS_WITH_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::ENDS_WITH_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::ENDS_WITH_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape($array[$key]).'%"';
+				}
+				else if( static::endsWith( DBTable::LT_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::LT_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` < "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::LE_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::LE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` <= "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::GE_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::GE_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` >= "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::GT_SYMBOL, $key ) )
+				{
+					$f_key = str_replace(DBTable::GT_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` > "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[$key] )
+				{
+					$f_key = str_replace(DBTable::NULL_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape($array[$key]).'%"';
+				}
+				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[$key] )
+				{
+					$f_key = str_replace(DBTable::NOT_NULL_SYMBOL,"",$key);
+					$constraints[] = '`'.$f_key.'` IS NOT NULL';
 				}
 			}
 			else
 			{
-				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+				error_log('Key "'.$key.'" is not a comparison property');
 			}
 		}
+
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
 		if( $for_update )
 			$sql .= ' FOR UPDATE ';
+
+		if( $limit && is_int( $limit) )
+			$sql .= ' LIMIT '.intval($limit).' ';
 
 		return $sql;
 	}
@@ -1418,38 +1493,7 @@ class DBTable
 
 	public static function searchGroupByIndex($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	{
-		$properties		= static::getAllProperties();
-		$constraints	= [];
-
-		foreach( $searchKeys as $key=>$value )
-		{
-			if( !in_array( $key, $properties ) )
-				return array();
-
-
-			if( is_array( $value ) )
-			{
-				if( count( $value ) )
-				{
-					$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
-				}
-				else
-				{
-					return array();
-				}
-			}
-			else
-			{
-				$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
-			}
-		}
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
-
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
-
+		$sql = static::getSearchSql( $searchKeys, $for_update );
 
 		return $as_objects
 			? static::getArrayFromQueryGroupByIndex( $sql, $dictionary_index )
