@@ -105,7 +105,7 @@ class DBTable
 230 = 1073741824
 231 = 2147483648
 232 = 4294967296
-	*/
+*/
 
 	var $_sqlCmp='';
 	var $_lastQuery;
@@ -149,7 +149,7 @@ class DBTable
 		return self::$connection->commit( $flags, $name );
 	}
 
-	public static function rollback( $flags=0,$name =NULL )
+	public static function rollback( $flags=0, $name =NULL )
 	{
 		error_log( 'Rolling back' );
 		self::$connection->rollback( $flags, $name );
@@ -261,7 +261,7 @@ class DBTable
 			self::$_attrFlags = $array;
 	}
 
-	public static function getArrayFromQueryGroupByIndex($query,$index,$connection=NULL )
+	public static function getArrayFromQueryGroupByIndex( $query, $index, $connection=NULL )
 	{
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
@@ -322,22 +322,22 @@ class DBTable
 			{
 				switch( $type )
 				{
-				case 16: //bit
-				case 1: //tinyint bool
-				case 2: //smallint
-				case 3: //integer 3
-				case 9: //mediumint
-				case 8: //bigint serial
-					$result[ $name ] = intVal( $row[ $name ] );
-					break;
-				case 4: //float
-				case 5: //double
-				case 246: //decimal numeric 246
-					$result[ $name ] = floatVal( $row[ $name ] );
-					break;
-				default:
-					$result[ $name ] = $row[ $name ];
-					break;
+					case 16: //bit
+					case 1: //tinyint bool
+					case 2: //smallint
+					case 3: //integer 3
+					case 9: //mediumint
+					case 8: //bigint serial
+							$result[ $name ] = intVal( $row[ $name ] );
+							break;
+					case 4: //float
+					case 5: //double
+					case 246: //decimal numeric 246
+							$result[ $name ] = floatVal( $row[ $name ] );
+							break;
+					default:
+						$result[ $name ] = $row[ $name ];
+						break;
 				}
 			}
 		}
@@ -418,7 +418,7 @@ class DBTable
 		return FALSE;
 	}
 
-	public static function createFromUniqArray($array,$asTableName=null )
+	public static function createFromUniqArray( $array, $asTableName=null )
 	{
 
 		$_obj = new static();
@@ -433,9 +433,9 @@ class DBTable
 		$c			= 0;
 		$obj		= $this;
 
-		foreach ($obj as $name => $value )
+		foreach ( $obj as $name => $value )
 		{
-			if( in_array($name, DBTable::$_control_variable_names ) )
+			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
 			if(isset($array[$_clas_name.'__'.$c]))
@@ -447,7 +447,7 @@ class DBTable
 		$obj->setWhereString();
 	}
 
-	public static function getUniqSelect($asTableName=null )
+	public static function getUniqSelect( $asTableName=null )
 	{
 		$fields		= array();
 		$c				= 0;
@@ -469,7 +469,7 @@ class DBTable
 		return $this->_lastQuery;
 	}
 
-	function setWhereString($only_id = true )
+	function setWhereString( $only_id = true )
 	{
 		$cmp_a		= array();
 		$name_class = get_class( $this );
@@ -480,7 +480,7 @@ class DBTable
 			return;
 		}
 
-		foreach ($this as $name => $value )
+		foreach ( $this as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
@@ -502,7 +502,7 @@ class DBTable
 
 		$name_class= get_class($this);
 
-		foreach ($this as $name => $value )
+		foreach ( $this as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
@@ -521,10 +521,10 @@ class DBTable
 	/*
 	*	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
 	*		example
-	//only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
-	$booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
-	//Assign all the values from $_POST
-	$booking->assignFromArray( $_POST );
+				//only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
+				$booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
+				//Assign all the values from $_POST
+				$booking->assignFromArray( $_POST );
 	*/
 
 	function assignFromArray()
@@ -552,7 +552,7 @@ class DBTable
 				continue;
 			}
 
-			if( !empty( $indexes ) && ! in_array($name,$indexes, TRUE) )
+			if( !empty( $indexes ) && ! in_array( $name, $indexes,TRUE ) )
 				continue;
 
 			$this->{$name} = $array[ $name ];
@@ -561,7 +561,7 @@ class DBTable
 
 		if( $i === 0 )
 		{
-			error_log('WARNING zero assigns from array '.get_class( $this ));
+			error_log( 'WARNING zero assigns from array '.get_class( $this ) );
 		}
 
 		return $i;
@@ -576,7 +576,7 @@ class DBTable
 		return NULL;
 	}
 
-	public static function createFromArray($array, $connection=NULL )
+	public static function createFromArray( $array, $connection=NULL )
 	{
 		$_obj = new static($connection);
 		$_obj->assignFromArray( $array );
@@ -596,7 +596,7 @@ class DBTable
 		$result			= $this->_conn->query( $this->_lastQuery );
 		$class_name		= get_class( $this );
 
-		if($result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
+		if( $result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
 			$this->id = $this->_conn->insert_id;
 		}
@@ -624,14 +624,14 @@ class DBTable
 		return $result;
 	}
 
-	function getInsertSql($ignore = FALSE )
+	function getInsertSql( $ignore = FALSE )
 	{
 		$array_fields	= array();
 		$array_values	= array();
 		$class_name		= get_class($this);
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($this as $name => $value )
+		foreach ( $this as $name => $value )
 		{
 			if( property_exists($class_name,$name))
 			{
@@ -799,7 +799,7 @@ class DBTable
 		$name_class		= get_class( $this );
 		$arrayFlags	= empty( self::$_attrFlags[ self::getBaseClassName() ] ) ? FALSE : self::$_attrFlags[ self::getBaseClassName() ];
 
-		foreach ($_tmp as $name => $value )
+		foreach ( $_tmp as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) || ( !isset( $this->{$name} ) && !is_null( $this->{$name} ) ) )
 			{
@@ -1180,7 +1180,7 @@ class DBTable
 		}
 		elseif( ( DBTable::EMAIL_VALUE & $flags ) != 0 )
 		{
-			if (!filter_var($this->{$key}, FILTER_VALIDATE_EMAIL) === false )
+			if ( !filter_var( $this->{$key}, FILTER_VALIDATE_EMAIL ) === false )
 			{
 				throw new ValidationException( $altMessage.$key.' "'.$this->{$key}.'" is not a valid email' );
 			}
@@ -1200,7 +1200,7 @@ class DBTable
 			if( $this->{$key} == 'CURRENT_TIMESTAMP' )
 				return;
 
-			if( !preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key}))
+			if( !preg_match( "/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/", $this->{$key} ) )
 			{
 				if(	strtotime( $this->{$key})===FALSE )
 				{
@@ -1232,7 +1232,7 @@ class DBTable
 			{
 				throw new ValidationException
 				(
-					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params['values'], true )
+					$altMessage.$key.' is not valid', 'Value is '.$this->{$key}.print_r( $params[ 'values' ], true )
 				);
 			}
 		}
@@ -1291,7 +1291,7 @@ class DBTable
 				$params[]				= &$row[ $field->name ];
 			}
 
-			call_user_func_array(array($stmt, 'bind_result' ), $params );
+			call_user_func_array( array( $stmt, 'bind_result' ), $params );
 			return $stmt;
 		}
 
@@ -1364,12 +1364,12 @@ class DBTable
 	}
 
 	/*
-	*	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*   searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
 	*
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
-		public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	public static function getSearchSql( $searchKeys, $for_update = FALSE )
 	*/
-	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE )
+	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE )
 	{
 		$properties = static::getAllProperties();
 		$props = array
@@ -1509,7 +1509,7 @@ class DBTable
 		$trimValues		= ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0;
 		$unsetInvalidDates = ( $flag & DBTable::UNSET_TRIMED_VALUES ) !== 0 ;
 
-		foreach ($obj as $name => $value )
+		foreach ( $obj as $name => $value )
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
