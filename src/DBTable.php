@@ -105,14 +105,14 @@ class DBTable
 230 = 1073741824
 231 = 2147483648
 232 = 4294967296
-*/
+ */
 
 	var $_sqlCmp='';
 	var $_lastQuery;
 	var $_conn;
 	var $_is_duplicated_error=false;
 
-	public static function init( $host, $user, $password ,$db)
+	public static function init( $host, $user, $password ,$db )
 	{
 		$mysqli = new \mysqli( $host, $user, $password, $db );
 
@@ -122,8 +122,8 @@ class DBTable
 			exit();
 		}
 
-		$mysqli->query( "SET NAMES 'utf8'");
-		$mysqli->set_charset( 'utf8');
+		$mysqli->query( "SET NAMES 'utf8'" );
+		$mysqli->set_charset( 'utf8' );
 
 		DBTable::$connection				= $mysqli;
 	}
@@ -144,14 +144,14 @@ class DBTable
 		self::$connection->autocommit( $autocommit );
 	}
 
-	public static function commit( $flags=0, $name=NULL)
+	public static function commit( $flags=0, $name=NULL )
 	{
-		return self::$connection->commit( $flags=0,$name);
+		return self::$connection->commit( $flags, $name );
 	}
 
-	public static function rollback( $flags=0,$name =NULL)
+	public static function rollback( $flags=0,$name =NULL )
 	{
-		error_log( 'Rolling back');
+		error_log( 'Rolling back' );
 		self::$connection->rollback( $flags, $name );
 	}
 
@@ -209,7 +209,6 @@ class DBTable
 
 	public static function getAllPropertiesExcept()
 	{
-		$num_args		= func_num_args();
 		$indexes		= array();
 
 		if( func_num_args() > 0 )
@@ -252,8 +251,8 @@ class DBTable
 
 	public static function getBaseClassName()
 	{
-			$class = explode('\\', get_called_class());
-			return array_pop($class);
+		$class = explode('\\', get_called_class());
+		return array_pop($class);
 	}
 
 	public static function setAttrFlags( $array=array() )
@@ -323,22 +322,22 @@ class DBTable
 			{
 				switch( $type )
 				{
-					case 16: //bit
-					case 1: //tinyint bool
-					case 2: //smallint
-					case 3: //integer 3
-					case 9: //mediumint
-					case 8: //bigint serial
-							$result[ $name ] = intVal( $row[ $name ] );
-							break;
-					case 4: //float
-					case 5: //double
-					case 246: //decimal numeric 246
-							$result[ $name ] = floatVal( $row[ $name ] );
-							break;
-					default:
-						$result[ $name ] = $row[ $name ];
-						break;
+				case 16: //bit
+				case 1: //tinyint bool
+				case 2: //smallint
+				case 3: //integer 3
+				case 9: //mediumint
+				case 8: //bigint serial
+					$result[ $name ] = intVal( $row[ $name ] );
+					break;
+				case 4: //float
+				case 5: //double
+				case 246: //decimal numeric 246
+					$result[ $name ] = floatVal( $row[ $name ] );
+					break;
+				default:
+					$result[ $name ] = $row[ $name ];
+					break;
 				}
 			}
 		}
@@ -346,9 +345,9 @@ class DBTable
 	}
 
 	/*
-	* $dictionary_index the index dictionary example dictionary by id
-	* if false return a simple array
-	*/
+	 * $dictionary_index the index dictionary example dictionary by id
+	 * if false return a simple array
+	 */
 	static function getArrayFromQuery( $sql, $dictionary_index = FALSE, $connection = NULL)
 	{
 		$className	= static::getBaseClassName();
@@ -520,13 +519,13 @@ class DBTable
 	}
 
 	/*
-	*	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
-	*		example
-				//only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
-				$booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
-				//Assign all the values from $_POST
-				$booking->assignFromArray( $_POST );
-	*/
+	 *	@return int number of assignations or FALSE on error. 0 asignations !== FALSE
+	 *		example
+	 //only assign vendor_shuttle_id, airport_id and user_id ignores the other index on $_POST
+	 $booking->assignFromArray($_POST,'vendor_shuttle_id','airport_id','user_id');
+	//Assign all the values from $_POST
+	$booking->assignFromArray( $_POST );
+	 */
 
 	function assignFromArray()
 	{
@@ -547,7 +546,7 @@ class DBTable
 				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
-				)
+			)
 
 			{
 				continue;
@@ -748,7 +747,7 @@ class DBTable
 		$sql_insert_fields = implode( ',',$array_fields);
 		$sql_insert_values = implode( ',',$array_values);
 		$sql_insert_string = 'INSERT'.($ignore ? ' IGNORE ' :' ').'INTO `'.self::getBaseClassName().'` ( '.$sql_insert_fields.' )
-								VALUES ( '.$sql_insert_values.' )';
+			VALUES ( '.$sql_insert_values.' )';
 
 		return $sql_insert_string;
 	}
@@ -1365,11 +1364,11 @@ class DBTable
 	}
 
 	/*
-	*	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
-	*
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
-	public static function getSearchSql( $searchKeys, $for_update = FALSE )
-	*/
+	 *	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	 *
+		 public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+			 public static function getSearchSql( $searchKeys, $for_update = FALSE )
+	 */
 	public static function getSearchSql($array,$for_update=FALSE,$limit=FALSE)
 	{
 		$properties = static::getAllProperties();
