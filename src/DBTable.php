@@ -1357,9 +1357,13 @@ class DBTable
 	static function endsWith( $haystack, $needle )
 	{
 		$length = strlen( $needle );
+
 		if( !$length ) {
+			error_log('NO length');
 			return true;
 		}
+		error_log( $needle.' '.$haystack.' '.(-$length) );
+
 		return substr( $haystack, -$length ) === $needle;
 	}
 
@@ -1385,8 +1389,16 @@ class DBTable
 			DBTABLE::NULL_SYMBOL,
 		);
 
-		$comparison_keys = array_keys( $array );
+		$valid_keys = array();
+		foreach($properties as $p)
+		{
+			foreach($props as $pp)
+			{
+				$valid_keys[] = $p.''.$pp;
+			}
+		}
 
+		$comparison_keys = array_keys( $array );
 		$constraints = array();
 
 		foreach($comparison_keys as $key )
@@ -1415,52 +1427,56 @@ class DBTable
 					$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
 				}
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
-			elseif( in_array( $key, $props ) )
+			elseif( in_array( $key, $valid_keys ) )
 			{
-				if( static::endsWith( DBTable::LIKE_SYMBOL, $key ) )
+				if( static::endsWith(  $key, DBTable::LIKE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LIKE_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape( $array[ $key ] ).'%"';
 				}
-				else if( static::endsWith( DBTable::STARTS_WITH_SYMBOL, $key ) )
+				else if( static::endsWith( $key,DBTable::STARTS_WITH_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::STARTS_WITH_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape( $array[ $key ] ).'%"';
 				}
-				else if( static::endsWith( DBTable::ENDS_WITH_SYMBOL, $key ) )
+				else if( static::endsWith( $key, DBTable::ENDS_WITH_SYMBOL ) )
 				{
-					$f_key = str_replace( DBTable::ENDS_WITH_SYMBOL, "", $key );
+					$f_key = str_replace( $key, DBTable::ENDS_WITH_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "'.static::escape( $array[ $key ] ).'%"';
 				}
-				else if( static::endsWith( DBTable::LT_SYMBOL, $key ) )
+				else if( static::endsWith( $key, DBTable::LT_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LT_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` < "'.static::escape( $array[ $key ] ).'%"';
+					$constraints[] = '`'.$f_key.'` < "'.static::escape( $array[ $key ] ).'"';
 				}
-				elseif( static::endsWith( DBTable::LE_SYMBOL, $key ) )
+				elseif( static::endsWith( $key, DBTable::LE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LE_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'%"';
+					$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'"';
 				}
-				elseif( static::endsWith( DBTable::GE_SYMBOL, $key ) )
+				elseif( static::endsWith( $key, DBTable::GE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::GE_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` >= "'.static::escape( $array[ $key ] ).'%"';
+					$constraints[] = '`'.$f_key.'` >= "'.static::escape( $array[ $key ] ).'"';
 				}
-				elseif( static::endsWith( DBTable::GT_SYMBOL, $key ) )
+				elseif( static::endsWith( $key, DBTable::GT_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::GT_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` > "'.static::escape( $array[ $key ] ).'%"';
+					$constraints[] = '`'.$f_key.'` > "'.static::escape( $array[ $key ] ).'"';
 				}
-				elseif( static::endsWith( DBTable::NULL_SYMBOL, $key ) && $array[ $key ] )
+				elseif( static::endsWith( $key, DBTable::NULL_SYMBOL ) && $array[ $key ] )
 				{
 					$f_key = str_replace( DBTable::NULL_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` IS NULL "'.static::escape( $array[ $key ] ).'%"';
+					$constraints[] = '`'.$f_key.'` IS NULL';
 				}
-				elseif( static::endsWith( DBTable::NOT_NULL_SYMBOL, $key ) && $array[ $key ] )
+				elseif( static::endsWith( $key, DBTable::NOT_NULL_SYMBOL ) && $array[ $key ] )
 				{
 					$f_key = str_replace( DBTable::NOT_NULL_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` IS NOT NULL';
+				}
+				else
+				{
+					error_log('Something happen PUT ATTENTION, it must never happen'. $key );
 				}
 			}
 			else
