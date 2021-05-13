@@ -38,12 +38,29 @@ class LoggableException extends \Exception
 
 		$last = $bt[ 0 ];
 
+		error_log(print_r($bt,true) );
+
 		for($i=0; $i<count( $bt ); $i++ )
 		{
-			if( strpos( $bt[$i]['file'], 'DBTable') === FALSE )
+			if( strpos( $bt[$i]['file'], 'LoggableException') !== FALSE )
+			{
+				continue;
+			}
+			else if( strpos( $bt[$i]['function'], 'execute') !== FALSE )
+			{
+				continue;
+			}
+			else if( strpos( $bt[$i]['file'], 'RestController') !== FALSE )
+			{
+				continue;
+			}
+			else if( strpos( $bt[$i]['file'], 'DBTable') !== FALSE )
+			{
+				break;
+			}
+			else
 			{
 				$last = $bt[ $i ];
-				break;
 			}
 		}
 
