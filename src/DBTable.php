@@ -23,6 +23,7 @@ class DBTable
 	const GT_SYMBOL='>';
 	const NOT_NULL_SYMBOL = '@';
 	const NULL_SYMBOL = '_NULL';
+	const DIFFERENT_THAN_SYMBOL	= '!';
 
 
 	const UNSET_TRIMED_VALUES	= 1;
@@ -1375,6 +1376,7 @@ class DBTable
 			DBTABLE::LT_SYMBOL,
 			DBTABLE::LE_SYMBOL,
 			DBTABLE::GE_SYMBOL,
+			DBTABLE::DIFFERENT_THAN_SYMBOL,
 			DBTABLE::GT_SYMBOL,
 			DBTABLE::LIKE_SYMBOL,
 			DBTable::STARTS_WITH_SYMBOL,
@@ -1447,6 +1449,11 @@ class DBTable
 				{
 					$f_key = str_replace( DBTable::LE_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'"';
+				}
+				elseif( static::endsWith( $key, DBTable::DIFFERENT_THAN_SYMBOL) )
+				{
+					$f_key = str_replace( DBTable::DIFFERENT_THAN_SYMBOL, "", $key );
+					$constraints[] = '`'.$f_key.'` != "'.static::escape( $array[ $key ] ).'"';
 				}
 				elseif( static::endsWith( $key, DBTable::GE_SYMBOL ) )
 				{
