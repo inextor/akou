@@ -23,7 +23,7 @@ class LoggableException extends \Exception
 		);
 	}
 
-	public function __construct( $message, $tecnical_message = '', $code = 0, Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 0, \Exception $previous = null)
 	{
 		parent::__construct($message, $code, $previous);
 
@@ -141,7 +141,7 @@ class LoggableException extends \Exception
 
 class ValidationException extends LoggableException
 {
-	public function __construct( $message, $tecnical_message = '', $code = 422 , Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 422 , \Exception $previous = null)
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
@@ -158,7 +158,7 @@ class ValidationException extends LoggableException
 
 class ForbidenException extends LoggableException
 {
-	public function __construct( $message, $tecnical_message = '', $code = 403 , Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 403 , \Exception $previous = null)
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
@@ -176,7 +176,7 @@ class ForbidenException extends LoggableException
 
 class NotFoundException extends LoggableException
 {
-	public function __construct( $message, $tecnical_message = '', $code = 404 , Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 404 , \Exception $previous = null)
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
@@ -193,7 +193,7 @@ class NotFoundException extends LoggableException
 
 class SessionException extends LoggableException
 {
-	public function __construct( $message, $tecnical_message = '', $code = 401 , Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 401 , \Exception $previous = null)
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
