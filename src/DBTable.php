@@ -1498,9 +1498,10 @@ class DBTable
 		return $sql;
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
 	{
-		$sql = static::getSearchSql($searchKeys, $for_update);
+
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
