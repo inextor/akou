@@ -9,7 +9,7 @@ class Image
 		$info = array();
 	}
 
-	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=1200,$max_width=1350, $max_weight=55242880,$min_width=50,$min_height)
+	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=1200,$max_width=1350, $max_weight=55242880,$min_width=50,$min_height=50,$filename_prefix="")
 	{
 		global $mysqli;
 
@@ -37,7 +37,7 @@ class Image
 				$image_size <= $max_weight
 		)
 		{
-			$uniq_id			= uniqid();
+			$uniq_id			= uniqid($filename_prefix);
 			$file_ext		   = 'jpg';
 			$image_type_defined = IMAGETYPE_JPEG;
 			$image_obj		  = FALSE;
