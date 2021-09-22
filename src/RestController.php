@@ -136,7 +136,8 @@ class RestController
 		{
 			error_log("LOOKING FOR CONTENT_TYPE".json_encode(array_keys( $_SERVER )) );
 		}
-		if( $_SERVER["CONTENT_TYPE"] == 'application/x-www-form-urlencoded' )
+
+		if(isset( $_SERVER["CONTENT_TYPE"] ) && $_SERVER["CONTENT_TYPE"] == 'application/x-www-form-urlencoded' )
 		{
 			$info = file_get_contents("php://input");
 			parse_str( $info, $post_vars);
@@ -144,9 +145,15 @@ class RestController
 			return $post_vars;
 		}
 
-		if( $_SERVER["CONTENT_TYPE"] == 'application/json' )
+		if( isset($_SERVER["CONTENT_TYPE"]) && $_SERVER["CONTENT_TYPE"] == 'application/json' )
 		{
 			$this->method_params = json_decode( file_get_contents("php://input"),true );
+			return $this->method_params;
+		}
+
+		if( !empty( $_GET ) )
+		{
+			$this->method_params = $_GET;
 			return $this->method_params;
 		}
 

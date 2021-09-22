@@ -282,8 +282,8 @@ class DBTable
 		while( $tmp_d = $resSql->fetch_assoc() )
 		{
 			$row = DBTable::getRowWithDataTypes($tmp_d,$fields_info );
-			$data = $asArray ? $row : $obj = static::createFromArray( $tmp_d );
-			//$data = $asArray ? $row : $obj = static::createFromArray( $row );
+			//$data = $asArray ? $row : $obj = static::createFromArray( $tmp_d );
+			$data = $asArray ? $row : $obj = static::createFromArray( $row );
 
 			if( isset( $result[ $row[ $index ] ]) )
 			{
@@ -439,7 +439,7 @@ class DBTable
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
-			if(isset($array[$_clas_name.'__'.$c]))
+			if(array_key_exists( $_clas_name.'__'.$c, $array))
 			{
 				$this->{$name} =	$array[ $_clas_name.'__'.$c ];
 			}
@@ -544,7 +544,8 @@ class DBTable
 		foreach( $this as $name => $value )
 		{
 			if(
-				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
+				//!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
+				!( array_key_exists($name,  $array ) ) 
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 			)
@@ -1031,7 +1032,7 @@ class DBTable
 		{
 
 			if(
-				!isset( $array[ $name ] )
+				!array_key_exists(  $name ,$array )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| in_array( $name, $indexes )
 			)
@@ -1514,9 +1515,10 @@ class DBTable
 		return $sql;
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
+	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
 	{
-		$sql = static::getSearchSql($searchKeys, $for_update);
+
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
