@@ -1454,7 +1454,23 @@ class DBTable
 				elseif( static::endsWith( $key, DBTable::DIFFERENT_THAN_SYMBOL) )
 				{
 					$f_key = str_replace( DBTable::DIFFERENT_THAN_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` != "'.static::escape( $array[ $key ] ).'"';
+
+
+					if( is_array( $array[ $key ] ) )
+					{
+						if( empty( $array[ $key ] ) )
+						{
+							$constraints[] = '2>1';
+						}
+						else
+						{
+							$constraints[] = '`'.$f_key.'` NOT IN ('.static::escapeArrayValues( $array[ $key ] ).')';
+						}
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` != "'.static::escape( $array[ $key ] ).'"';
+					}
 				}
 				elseif( static::endsWith( $key, DBTable::GE_SYMBOL ) )
 				{
