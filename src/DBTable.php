@@ -545,7 +545,7 @@ class DBTable
 		{
 			if(
 				//!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
-				!( array_key_exists($name,  $array ) ) 
+				!( array_key_exists($name,  $array ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 			)
@@ -1483,7 +1483,8 @@ class DBTable
 			}
 			else
 			{
-				error_log('Key "'.$key.'" is not a comparison property');
+				$backtrace	= debug_backtrace(  );
+				error_log('Key "'.$key.'" is not a comparison property, File'.$backtrace[1]['file'].'::'.$backtrace[1]['function'].' at line'.$backtrace[1]['line']);
 			}
 		}
 
