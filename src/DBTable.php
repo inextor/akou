@@ -127,6 +127,7 @@ class DBTable
 		$mysqli->set_charset( 'utf8' );
 
 		DBTable::$connection				= $mysqli;
+		return $mysqli;
 	}
 
 	function __construct( $connection = NULL )
