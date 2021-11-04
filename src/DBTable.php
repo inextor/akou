@@ -440,7 +440,7 @@ class DBTable
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
-			if(isset($array[$_clas_name.'__'.$c]))
+			if(array_key_exists( $_clas_name.'__'.$c, $array))
 			{
 				$this->{$name} =	$array[ $_clas_name.'__'.$c ];
 			}
@@ -545,7 +545,8 @@ class DBTable
 		foreach( $this as $name => $value )
 		{
 			if(
-				!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
+				//!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
+				!( array_key_exists($name,  $array ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 			)
@@ -1032,7 +1033,7 @@ class DBTable
 		{
 
 			if(
-				!isset( $array[ $name ] )
+				!array_key_exists(  $name ,$array )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| in_array( $name, $indexes )
 			)
@@ -1454,7 +1455,23 @@ class DBTable
 				elseif( static::endsWith( $key, DBTable::DIFFERENT_THAN_SYMBOL) )
 				{
 					$f_key = str_replace( DBTable::DIFFERENT_THAN_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` != "'.static::escape( $array[ $key ] ).'"';
+
+
+					if( is_array( $array[ $key ] ) )
+					{
+						if( empty( $array[ $key ] ) )
+						{
+							$constraints[] = '2>1';
+						}
+						else
+						{
+							$constraints[] = '`'.$f_key.'` NOT IN ('.static::escapeArrayValues( $array[ $key ] ).')';
+						}
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` != "'.static::escape( $array[ $key ] ).'"';
+					}
 				}
 				elseif( static::endsWith( $key, DBTable::GE_SYMBOL ) )
 				{
@@ -1483,7 +1500,8 @@ class DBTable
 			}
 			else
 			{
-				error_log('Key "'.$key.'" is not a comparison property');
+				$backtrace	= debug_backtrace(  );
+				error_log('Key "'.$key.'" is not a comparison property, File'.$backtrace[1]['file'].'::'.$backtrace[1]['function'].' at line'.$backtrace[1]['line']);
 			}
 		}
 
