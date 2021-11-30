@@ -1256,10 +1256,20 @@ class DBTable
 
 			$fieldsRes	= self::query( 'describe `'.self::$connection->real_escape_string( $tableName ).'`' );
 
+			$field_rows = array();
+
 			while( $fieldRow = $fieldsRes->fetch_object() )
 			{
-				$phpCode .= '	var $'.$fieldRow->Field.';'.PHP_EOL;
+				$field_rows[] = $fieldRow->Field;
+				//$phpCode .= '	var $'.$fieldRow->Field.';'.PHP_EOL;
 			}
+
+			sort($field_rows );
+			foreach($field_rows as $field)
+			{
+				$phpCode .= '	var $'.$field.';'.PHP_EOL;
+			}
+
 
 			$phpCode .= '}'.PHP_EOL;
 		}
