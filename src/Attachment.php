@@ -16,7 +16,6 @@ class Attachment
 		if( $obj_FILE['error'] == 1 )
 		{
 			throw new ValidationException('File exceds max file size');
-			return false;
 		}
 
 
