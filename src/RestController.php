@@ -95,12 +95,30 @@ class RestController
 		}
 		else if( method_exists( $this, $method) )
 		{
-			$this->{$method}();
-			if( !empty( $this->response  ) )
+			try
 			{
+				$this->{$method}();
+
+				if( !empty( $this->response  ) )
+				{
+
+				}
+				echo $this->response;
+				return;
 			}
-			echo $this->response;
-			return;
+			catch(\Exception $e)
+			{
+				$code = $e->getCode();
+
+				if( $code >= 100 && $code < 600 )
+				{
+					$this->sendStatus( $code )->json($e->getMessage());
+				}
+				else
+				{
+					$this->sendStatus(500)->json( $e->getMessage() );
+				}
+			}
 		}
 		else
 		{

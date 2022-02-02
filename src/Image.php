@@ -9,7 +9,7 @@ class Image
 		$info = array();
 	}
 
-	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=1200,$max_width=1350, $max_weight=55242880,$min_width=50,$min_height=50,$filename_prefix="")
+	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=500,$max_width=500, $max_weight=55242880,$min_width=50,$min_height=50,$filename_prefix="")
 	{
 		global $mysqli;
 
@@ -21,7 +21,6 @@ class Image
 		if( $obj_FILE['error'] == 1 )
 		{
 			throw new SystemException('Ocurrió un error de red al subir la imagen, posiblemente el tamaño de la imagen es mayor a 5 Mb');
-			return false;
 		}
 
 
@@ -143,7 +142,7 @@ class Image
 		}
 		elseif ( $image_size >= $max_weight )
 		{
-			$message	= 'Imagen demasiado grande (Mayor de 5 mbs)...'.$image_size.' '.$max_weight;
+			$message	= 'Imagen demasiado grande (Mayor de 300kbs)... '.$image_size.' '.$max_weight;
 		}
 		else
 		{
@@ -220,7 +219,10 @@ class Image
 
 		$ratio_original	 = $original_width / $original_height;
 
-		if( $heigth == 0 )
+
+		// Not tested yet
+		//
+		if( $height == 0 )
 		{
 			$solicitado_height = $original_height*$width / $original_width;
 		}

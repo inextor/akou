@@ -1297,6 +1297,7 @@ class DBTable
 		{
 			$stmt->execute();
 			$meta = $stmt->result_metadata();
+			$params = [];
 
 			while ($field = $meta->fetch_field())
 			{
@@ -1322,6 +1323,7 @@ class DBTable
 			$meta = $stmt->result_metadata();
 
 			$i = 0;
+			$params = [];
 			while ($field = $meta->fetch_field())
 			{
 				if( $addHeader )
