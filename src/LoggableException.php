@@ -3,9 +3,9 @@ namespace AKOU;
 
 class LoggableException extends \Exception
 {
-	public $file;
-	public $line;
-	public $function;
+	//public $file;
+	//public $line;
+	//public $function;
 	public $tecnical_message;
 	public $date;
 	public $code;
@@ -28,7 +28,7 @@ class LoggableException extends \Exception
 		parent::__construct($message, $code, $previous);
 
 		$this->file				= '';
-		$this->line				= '';
+		$this->line				= 0;
 		$this->function			= '';
 		$this->tecnical_message	= $tecnical_message;
 		$this->date				= date('Y-m-d H:i:s');
