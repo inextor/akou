@@ -762,7 +762,6 @@ class DBTable
 
 	function deleteDb()
 	{
-		$this->setWhereStringNonEmptyValues();
 		$sql = 'DELETE FROM `'.self::getBaseClassName().'` WHERE '.$this->_sqlCmp.' LIMIT 1';
 		$this->_lastQuery = $sql;
 
