@@ -1562,7 +1562,7 @@ class DBTable
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
-			$trimValue = $trimValues ? $value : trim( $value );
+			$trimValue = $trimValues || $value === null ? $value : trim( $value );
 
 			if( empty( $trimValue ) )
 			{
