@@ -473,12 +473,18 @@ class DBTable
 
 	function setWhereString( $only_id = true )
 	{
+		if( $this->_conn == null )
+		{
+			error_log('No database connection set');
+			return;
+		}
+
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
 		if( $only_id && property_exists( $name_class, 'id' ) && isset( $this->id ) )
 		{
-			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
+			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id??'' ).'"';
 			return;
 		}
 
