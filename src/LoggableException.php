@@ -87,6 +87,12 @@ class LoggableException extends \Exception
 	**/
 	public static function addMysqlError()
 	{
+		if( !DBTable::$connection )
+		{
+			error_log('NO mysql connection set');
+			return;
+		}
+
 		if( DBTable::$connection->error )
 		{
 			$datos	  = '';
