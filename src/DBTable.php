@@ -3,6 +3,7 @@
 //it breaks the internet
 namespace AKOU;
 
+use Exception;
 
 class DBTable
 {
@@ -797,7 +798,55 @@ class DBTable
 		}
 
 		$this->_lastQuery	= $this->getUpdateSql( $indexes );
-		return $this->_conn->query( $this->_lastQuery );
+
+
+		$result = false;
+
+		try{
+			$result = $this->_conn->query( $this->_lastQuery );
+		}
+		catch(\Exception $e)
+		{
+			if( $this->_conn->error )
+			{
+				if( strpos( $this->_conn->error, 'column' ) !== FALSE )
+				{
+					$class_name		= get_class( $this );
+					$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
+					$lastIndex	= strrpos( $this->_conn->error,'\'' );
+					$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
+					error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+				}
+				else
+				{
+					error_log( $this->_conn->error );
+				}
+			}
+
+			throw $e;
+		}
+
+
+		if( $this->_conn->error )
+		{
+			$class_name		= get_class( $this );
+			$this->_is_duplicated_error = $this->_conn->errno == 1062;
+
+			if( strpos( $this->_conn->error, 'column' ) !== FALSE )
+			{
+				error_log( $this->_conn->error );
+				$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
+				$lastIndex	= strrpos( $this->_conn->error,'\'' );
+				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
+				error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+			}
+			else
+			{
+				error_log( $this->_conn->error );
+			}
+		}
+
+		return $result;
 	}
 
 	function getUpdateSql( $fieldsToUpdate = array() )
