@@ -823,7 +823,7 @@ class DBTable
 				}
 			}
 
-			throw $e;
+			return false;
 		}
 
 
@@ -1581,6 +1581,22 @@ class DBTable
 			$sql .= ' LIMIT '.intval( $limit ).' ';
 
 		return $sql;
+	}
+
+	public function trimValues()
+	{
+		$obj = $this;
+
+		foreach ($obj as $name => $value )
+		{
+			if( in_array( $name, DBTable::$_control_variable_names ) )
+				continue;
+
+			if( !empty( $obj->{$name} ) )
+			{
+				$this->{$name} = trim( $obj->{$name} );
+			}
+		}
 	}
 
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
