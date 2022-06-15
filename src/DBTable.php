@@ -612,7 +612,6 @@ class DBTable
 
 			if( strpos( $this->_conn->error, 'column' ) !== FALSE )
 			{
-				error_log( $this->_conn->error );
 				$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
 				$lastIndex	= strrpos( $this->_conn->error,'\'' );
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
