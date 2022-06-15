@@ -3,6 +3,7 @@
 //it breaks the internet
 namespace AKOU;
 
+use Exception;
 
 class DBTable
 {
@@ -473,12 +474,18 @@ class DBTable
 
 	function setWhereString( $only_id = true )
 	{
+		if( $this->_conn == null )
+		{
+			error_log('No database connection set');
+			return;
+		}
+
 		$cmp_a		= array();
 		$name_class = get_class( $this );
 
 		if( $only_id && property_exists( $name_class, 'id' ) && isset( $this->id ) )
 		{
-			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id ).'"';
+			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id??'' ).'"';
 			return;
 		}
 
@@ -761,7 +768,6 @@ class DBTable
 
 	function deleteDb()
 	{
-		$this->setWhereStringNonEmptyValues();
 		$sql = 'DELETE FROM `'.self::getBaseClassName().'` WHERE '.$this->_sqlCmp.' LIMIT 1';
 		$this->_lastQuery = $sql;
 
@@ -791,7 +797,55 @@ class DBTable
 		}
 
 		$this->_lastQuery	= $this->getUpdateSql( $indexes );
-		return $this->_conn->query( $this->_lastQuery );
+
+
+		$result = false;
+
+		try{
+			$result = $this->_conn->query( $this->_lastQuery );
+		}
+		catch(\Exception $e)
+		{
+			if( $this->_conn->error )
+			{
+				if( strpos( $this->_conn->error, 'column' ) !== FALSE )
+				{
+					$class_name		= get_class( $this );
+					$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
+					$lastIndex	= strrpos( $this->_conn->error,'\'' );
+					$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
+					error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+				}
+				else
+				{
+					error_log( $this->_conn->error );
+				}
+			}
+
+			return false;
+		}
+
+
+		if( $this->_conn->error )
+		{
+			$class_name		= get_class( $this );
+			$this->_is_duplicated_error = $this->_conn->errno == 1062;
+
+			if( strpos( $this->_conn->error, 'column' ) !== FALSE )
+			{
+				error_log( $this->_conn->error );
+				$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
+				$lastIndex	= strrpos( $this->_conn->error,'\'' );
+				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
+				error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+			}
+			else
+			{
+				error_log( $this->_conn->error );
+			}
+		}
+
+		return $result;
 	}
 
 	function getUpdateSql( $fieldsToUpdate = array() )
@@ -1528,6 +1582,22 @@ class DBTable
 		return $sql;
 	}
 
+	public function trimValues()
+	{
+		$obj = $this;
+
+		foreach ($obj as $name => $value )
+		{
+			if( in_array( $name, DBTable::$_control_variable_names ) )
+				continue;
+
+			if( !empty( $obj->{$name} ) )
+			{
+				$this->{$name} = trim( $obj->{$name} );
+			}
+		}
+	}
+
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
 	{
 
@@ -1562,7 +1632,7 @@ class DBTable
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
-			$trimValue = $trimValues ? $value : trim( $value );
+			$trimValue = $trimValues || $value === null ? $value : trim( $value );
 
 			if( empty( $trimValue ) )
 			{

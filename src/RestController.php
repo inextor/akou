@@ -175,6 +175,12 @@ class RestController
 			return $this->method_params;
 		}
 
+		if( !empty( $_POST ) )
+		{
+			$this->method_params = $_POST;
+			return $this->method_params;
+		}
+
 		return array();
 	}
 
