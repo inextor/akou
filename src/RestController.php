@@ -152,7 +152,7 @@ class RestController
 
 		if( empty( $_SERVER["CONTENT_TYPE"] ) )
 		{
-			error_log("LOOKING FOR CONTENT_TYPE".json_encode(array_keys( $_SERVER )) );
+			//error_log("LOOKING FOR CONTENT_TYPE".json_encode(array_keys( $_SERVER )) );
 		}
 
 		if(isset( $_SERVER["CONTENT_TYPE"] ) && $_SERVER["CONTENT_TYPE"] == 'application/x-www-form-urlencoded' )
