@@ -3,7 +3,6 @@
 //it breaks the internet
 namespace AKOU;
 
-use Exception;
 
 class DBTable
 {
