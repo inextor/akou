@@ -190,7 +190,15 @@ class DBTable
 		$result = DBTable::$connection->query( $sql );
 
 		if( !$result )
+		{
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable',
+				'Error bad query on getValueFromQuery ==> '.$sql
+			);
 			return NULL;
+		}
 
 		$fields_info = DBTable::getFieldsInfo( $result );
 
@@ -235,12 +243,16 @@ class DBTable
 		$mysqli		= empty( $conn ) ? self::$connection : $conn;
 		$resTotal	= $mysqli->query( 'SELECT FOUND_ROWS()' );
 
+
+
 		if( !$resTotal )
+		{
 			throw new SystemException
 			(
 				'An error occurred please try again later',
 				'Make sure SQL_CALC_FOUND_ROWS was added to the previous query'
 			);
+		}
 
 		$totalRow	= $resTotal->fetch_row();
 		return intVal( $totalRow[ 0 ]);
@@ -248,7 +260,18 @@ class DBTable
 
 	public static function query( $sql_query )
 	{
-		return self::$connection->query( $sql_query );
+		$result = self::$connection->query( $sql_query );
+
+		if( !$result )
+		{
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable::query',
+				'Error with query -->'.$query.'<--- '.$conn->error
+			);
+		}
+		return $result;
 	}
 
 	public static function getBaseClassName()
@@ -273,6 +296,13 @@ class DBTable
 
 		if( !$resSql )
 		{
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable::getArrayFromQuery',
+				'Error with query -->'.$query.'<--- '.$conn->error
+			);
+
 			throw new SystemException( 'An error occours please try gain later', $query );
 		}
 
@@ -360,6 +390,12 @@ class DBTable
 
 		if( !$resSql )
 		{
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable::getArrayFromQuery',
+				'Error with query -->'.$sql.'<--- '.$conn->error
+			);
 			throw new SystemException( 'An error occours please try gain later', $sql );
 		}
 
@@ -405,6 +441,16 @@ class DBTable
 		$conn = $connection ?: self::$connection;
 
 		$result = $conn->query( $query );
+
+		if( !$result )
+		{
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable::createFromArray',
+				'Error with query -->'.$query.'<--- '.$conn->error
+			);
+		}
 
 
 		if( $result && $data = $result->fetch_assoc( ))
@@ -475,7 +521,12 @@ class DBTable
 	{
 		if( $this->_conn == null )
 		{
-			error_log('No database connection set');
+			Utils::addLog
+			(
+				Utils::LOG_LEVEL_ERROR,
+				'DBTable',
+				'Connection is not set yet'
+			);
 			return;
 		}
 
@@ -621,7 +672,14 @@ class DBTable
 				$firstIndex	= strpos( $this->_conn->error,'\'' )+1;
 				$lastIndex	= strrpos( $this->_conn->error,'\'' );
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
-				error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+				$error_message = 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<';
+
+				Utils::addLog
+				(
+					Utils::LOG_LEVEL_ERROR,
+					'DBTable',
+					$error_message
+				);
 			}
 			else
 			{
@@ -1412,6 +1470,7 @@ class DBTable
 	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
 	{
 		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
+		error_log('SEQUEL'. $sql );
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
 			return $info[0];
@@ -1436,6 +1495,11 @@ class DBTable
 	*/
 	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE )
 	{
+		if( DBTable::$connection == NULL )
+		{
+			error_log('No mysql connection set');
+		}
+
 		$properties = static::getAllProperties();
 		$props = array
 		(
@@ -1465,6 +1529,7 @@ class DBTable
 
 		foreach($comparison_keys as $key )
 		{
+			//error_log('Every one');
 			//Comparing with regular equal or in array
 			if( in_array( $key, $properties ) )
 			{
@@ -1486,7 +1551,14 @@ class DBTable
 				}
 				else
 				{
-					$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+					if( $value === NULL )
+					{
+						$constraints[] = '`'.$key.'` IS NULL';
+					}
+					else
+					{
+						$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+					}
 				}
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
 			elseif( in_array( $key, $valid_keys ) )
@@ -1572,11 +1644,13 @@ class DBTable
 		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
 
+		if( $limit && is_int( $limit) )
+			$sql .= ' LIMIT '.intval( $limit ).' ';
+
 		if( $for_update )
 			$sql .= ' FOR UPDATE ';
 
-		if( $limit && is_int( $limit) )
-			$sql .= ' LIMIT '.intval( $limit ).' ';
+
 
 		return $sql;
 	}
