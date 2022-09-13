@@ -13,10 +13,25 @@ class Attachment
 		$file_type = $obj_FILE['type'];
 		$file_size = $obj_FILE['size'];
 
-		if( $obj_FILE['error'] == 1 )
+		if( $obj_FILE['error'] > 0 )
 		{
-			throw new ValidationException('File exceds max file size');
+			//https://www.php.net/manual/en/features.file-upload.errors.php
+			//
+			$phpFileUploadErrors = array(
+			    0 => 'There is no error, the file uploaded with success',
+			    1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+			    2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+			    3 => 'The uploaded file was only partially uploaded',
+			    4 => 'No file was uploaded',
+			    6 => 'Missing a temporary folder',
+			    7 => 'Failed to write file to disk.',
+			    8 => 'A PHP extension stopped the file upload.',
+			);
+
+			throw new ValidationException($phpFileUploadErrors[$obj_FILE['error']]);
 		}
+
+
 
 
 		if ( $file_size > $min_weight && $file_size <= $max_weight)
