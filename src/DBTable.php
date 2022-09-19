@@ -653,19 +653,41 @@ class DBTable
 	function insertDb( $ignore = FALSE )
 	{
 		$this->_lastQuery	= $this->getInsertSql( $ignore );
-		$result			= $this->_conn->query( $this->_lastQuery );
+
+		$result = false;
+
+		try
+		{
+			$result = $this->_conn->query( $this->_lastQuery );
+		}
+		catch(\Exception $e)
+		{
+
+		}
+
+		$this->logSqlError();
+
 		$class_name		= get_class( $this );
 
 		if( $result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
 			$this->id = $this->_conn->insert_id;
 		}
-
 		$this->setWhereString();
+		return $result;
+	}
 
+	function logSqlError()
+	{
 		if( $this->_conn->error )
 		{
+			$class_name		= get_class( $this );
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
+
+			if( $this->_is_duplicated_error )
+			{
+				error_log('Duplicate error');
+			}
 
 			if( strpos( $this->_conn->error, 'column' ) !== FALSE )
 			{
@@ -686,8 +708,6 @@ class DBTable
 				error_log( $this->_conn->error );
 			}
 		}
-
-		return $result;
 	}
 
 	function getInsertSql( $ignore = FALSE )
