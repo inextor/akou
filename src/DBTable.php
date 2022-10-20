@@ -160,6 +160,9 @@ class DBTable
 
 	public static function escape( $param )
 	{
+		if( $param === NULL )
+			return NULL;
+
 		return self::$connection->real_escape_string( $param );
 	}
 
