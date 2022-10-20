@@ -9,7 +9,7 @@ class Image
 		$info = array();
 	}
 
-	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=500,$max_width=500, $max_weight=55242880,$min_width=50,$min_height=50,$filename_prefix="")
+	function formImageSaveToPath($obj_FILE,$to_save_dirname, $max_height=500,$max_width=500, $max_weight=55242880,$min_width=50,$min_height=50,$filename_prefix="",$force_webp=false)
 	{
 		global $mysqli;
 
@@ -80,6 +80,12 @@ class Image
 					$image_type_defined = IMAGETYPE_BMP;
 					$image_obj		  = \imagecreatefromwbmp( $obj_FILE['tmp_name'] );
 					break;
+				case 'image/webp':
+					$file_ext = 'webp';
+					$image_type_defined = IMAGETYPE_WEBP;
+					$image_obj		  = \imagecreatefromwebp( $obj_FILE['tmp_name'] );
+					break;
+
 				default:
 					$file_ext = 'jpg';
 					$image_type_defined = IMAGETYPE_JPEG;
@@ -96,8 +102,14 @@ class Image
 			}
 
 			$file_name		  = $uniq_id . '.' . $file_ext;
+			if( $force_webp )
+			{
+				$filename = $uniq_id.'.webp';
+			}
+
 			$image_content	  = file_get_contents( $obj_FILE['tmp_name'] );
 			$original_filename = $obj_FILE['name'];
+			$image_real_size = strlen( $image_content );
 
 			$image_width	= imagesx( $image_obj );
 			$image_height   = imagesy( $image_obj );
@@ -111,12 +123,18 @@ class Image
 				);
 			}
 
-			if( $image_width > $max_width || $image_height > $max_height )
+			if($force_webp || $image_real_size > $max_weight || ( $image_width > $max_width || $image_height > $max_height) )
 			{
 				//No hay pedo tiene un modo idiota
 				$image_obj	  = $this->resize_image2( $image_obj , $max_width, $max_height );
 				$image_width	= imagesx( $image_obj );
 				$image_height   = imagesy( $image_obj );
+
+				if( $force_webp )
+				{
+					$image_type = 'image/webp';
+				}
+
 				$image_content  = $this->imageByContentType( $image_obj, $image_type );
 			}
 
@@ -124,7 +142,7 @@ class Image
 			{
 				return Array(
 					"filename" => $file_name
-					,"original_filename"=>$original_filename
+					,"original_filename"=> $original_filename
 					,"filenamepath" => $to_save_dirname."/".$file_name
 					,"content_type" => $image_type
 					,"size" => strlen( $image_content )
@@ -351,6 +369,8 @@ class Image
 				case 'image/gif':
 					imagegif( $image );
 					break;
+				case 'image/webp':
+					imagewebp($image,NULL, 95);
 				default:
 					imagejpeg( $image );
 					break;
