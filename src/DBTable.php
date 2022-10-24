@@ -1493,7 +1493,6 @@ class DBTable
 	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
 	{
 		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
-		error_log('SEQUEL'. $sql );
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
 			return $info[0];
