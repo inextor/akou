@@ -8,7 +8,7 @@ if ( !isset( $HTTP_RAW_POST_DATA ) )
 	$HTTP_RAW_POST_DATA = file_get_contents( 'php://input' );
 }
 
-class  Utils
+class Utils
 {
 	const LOG_LEVEL_NONE			= 0; //always goes to dblog reportin always ONLY on echo before header problems //never active just in case of error in production
 	const LOG_LEVEL_ERROR			= 5; //always goes to dblog reporting always
@@ -44,30 +44,30 @@ class  Utils
 	}
 
 	/**
-	 * Calculates the great-circle distance between two points, with
-	 * the Vincenty formula.
-	 * @param float $latitudeFrom Latitude of start point in [deg decimal]
-	 * @param float $longitudeFrom Longitude of start point in [deg decimal]
-	 * @param float $latitudeTo Latitude of target point in [deg decimal]
-	 * @param float $longitudeTo Longitude of target point in [deg decimal]
-	 * @param float $earthRadius Mean earth radius in [m]
-	 * @return float Distance between points in [m] (same as earthRadius)
-	 */
+	* Calculates the great-circle distance between two points, with
+	* the Vincenty formula.
+	* @param float $latitudeFrom Latitude of start point in [deg decimal]
+	* @param float $longitudeFrom Longitude of start point in [deg decimal]
+	* @param float $latitudeTo Latitude of target point in [deg decimal]
+	* @param float $longitudeTo Longitude of target point in [deg decimal]
+	* @param float $earthRadius Mean earth radius in [m]
+	* @return float Distance between points in [m] (same as earthRadius)
+	*/
 	static function vincentyGreatCircleDistance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $miles = true)
 	{
 		$earthRadius = 6371000;
 		// convert from degrees to radians
-		$latFrom  = deg2rad($latitudeFrom);
-		$lonFrom  = deg2rad($longitudeFrom);
+		$latFrom	= deg2rad($latitudeFrom);
+		$lonFrom	= deg2rad($longitudeFrom);
 		$latTo	= deg2rad($latitudeTo);
 		$lonTo	= deg2rad($longitudeTo);
 
 		$lonDelta = $lonTo - $lonFrom;
 		$a		= pow(cos($latTo) * sin($lonDelta), 2) + pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
-		$b		= sin($latFrom)   * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+		$b		= sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
 
 		$angle	= atan2(sqrt($a), $b);
-		$result   = $angle * $earthRadius;
+		$result	= $angle * $earthRadius;
 
 		return $miles ? $result * .000621371 : $result;
 	}
@@ -138,8 +138,8 @@ class  Utils
 
 	static function getPasswordHash( $timestamp , $password, $salt = 'iLikeRandom' )
 	{
-	    $thehash    = sha1( $timestamp . $salt . $password );
-	    return $thehash;
+		$thehash	= sha1( $timestamp . $salt . $password );
+		return $thehash;
 	}
 	/**
 	* Est funcion sirve para hace un dump de la variables que se reciben asi como algunas de ambiente
@@ -331,22 +331,22 @@ class  Utils
 		return $local->format( $format ); // output: 2011-04-26 22:45:00
 	}
 
-	static function convertUTC2Timezone( $dateTimestamp, $toTimezone = 'America/Los_Angeles', $format = 'Y-m-d H:i:s'  )
+	static function convertUTC2Timezone( $dateTimestamp, $toTimezone = 'America/Los_Angeles', $format = 'Y-m-d H:i:s' )
 	{
 		return self::convertTimestampToTimeZone( $dateTimestamp,'UTC', $toTimezone, $format );
 	}
 
 	static function startsWith( $toFind, $haystack )
 	{
-	     $length = strlen($toFind);
-	     return (substr($haystack, 0, $length) === $toFind);
+		$length = strlen($toFind);
+		return (substr($haystack, 0, $length) === $toFind);
 	}
 
 	static function endsWith( $toFind, $haystack)
 	{
-	    $length = strlen($toFind);
+		$length = strlen($toFind);
 
-	    return $length === 0 || (substr($haystack, -$length) === $toFind);
+		return $length === 0 || (substr($haystack, -$length) === $toFind);
 	}
 	static function getDatetimeFromString( $value )
 	{
