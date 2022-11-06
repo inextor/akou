@@ -348,4 +348,9 @@ class  Utils
 
 	    return $length === 0 || (substr($haystack, -$length) === $toFind);
 	}
+	static function getDatetimeFromString( $value )
+	{
+		$time = strtotime( $value );
+		return date('Y-m-d H:i:s');
+	}
 }
