@@ -183,6 +183,7 @@ class ArrayUtils
 		return $result();
 	}
 
+
 	static function filterByMultipleValues($array, $index, $array_values )
 	{
 		$newarray = array();
@@ -191,19 +192,19 @@ class ArrayUtils
 		{
 			foreach(array_keys($array) as $key)
 			{
-				if( in_array(  $array[$key][$index] , $array_values) )
+				if( in_array( $array[$key][$index] , $array_values) )
 					$newarray[$key] = $array[$key];
 			}
 		}
 		return $newarray;
 	}
 	/*
-	  results = array(
-		   0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
-		   1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
+		results = array(
+			0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
+			1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
 		);
 
-	  $nResults = filter_by_value($results, 'key2', '2');
+		nResults = filter_by_value($results, 'key2', '2');
 
 
 	Output :
@@ -223,6 +224,21 @@ class ArrayUtils
 			}
 		}
 		return $newarray;
+	}
+
+	static function &find(&$array, $index, $value)
+	{
+		if(is_array($array) && count($array)>0)
+		{
+			foreach($array as $key=>$value)
+			{
+				if( $array[$key][$index] == $value )
+				{
+					return $array[$key];
+				}
+			}
+		}
+		return null;
 	}
 
 	static function sortByIndexAsc($index,$array)
