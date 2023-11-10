@@ -682,8 +682,10 @@ class DBTable
 
 	function logSqlError()
 	{
+
 		if( $this->_conn->error )
 		{
+			error_log( $this->_conn->error );
 			$class_name		= get_class( $this );
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
 
@@ -699,6 +701,7 @@ class DBTable
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
 				$error_message = 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<';
 
+				error_log( $this->_conn->error );
 				Utils::addLog
 				(
 					Utils::LOG_LEVEL_ERROR,
@@ -1490,13 +1493,23 @@ class DBTable
 		return static::getSearchSql( $searchKeys, $for_update, 1 );
 	}
 
-	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	public static function getFirstFromSql( $sql, $as_objects=TRUE )
 	{
-		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
 		$info	= $as_objects ? static::getArrayFromQuery( $sql ) : DBTable::getArrayFromQuery( $sql );
 		if( count( $info ) )
 			return $info[0];
 		return NULL;
+	}
+
+	public static function getFirst($searchKeys, $as_objects=TRUE, $for_update = false )
+	{
+		return static::searchFirst( $searchKeys, $as_objects, $for_update );
+	}
+
+	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	{
+		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
+		return static::getFirstFromSql( $sql, $as_objects );
 	}
 
 	static function endsWith( $haystack, $needle )
