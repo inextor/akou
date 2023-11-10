@@ -226,13 +226,13 @@ class ArrayUtils
 		return $newarray;
 	}
 
-	static function &find(&$array, $index, $value)
+	static function find($array, $index, $value)
 	{
 		if(is_array($array) && count($array)>0)
 		{
-			foreach($array as $key=>$value)
+			foreach($array as $key=>$val)
 			{
-				if( $array[$key][$index] == $value )
+				if( ArrayUtils::getProperty( $val, $index ) == $value )
 				{
 					return $array[$key];
 				}
