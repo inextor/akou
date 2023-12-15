@@ -355,8 +355,14 @@ class DBTable
 			}
 			else
 			{
+				if(  strpos($name,"json") === 0  ) 
+				{
+					error_log('json es '.$type );
+				}
+
 				switch( $type )
 				{
+					case 245: //json en otra parte
 					case 252: //json
 						if( strpos($name,"json") === 0 )
 						{
