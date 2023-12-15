@@ -224,6 +224,21 @@ class ArrayUtils
 		return $newarray;
 	}
 
+	static function find($array, $index, $value)
+	{
+		if(is_array($array) && count($array)>0)
+		{
+			foreach($array as $key=>$val)
+			{
+				if( ArrayUtils::getProperty( $val, $index ) == $value )
+				{
+					return $array[$key];
+				}
+			}
+		}
+		return null;
+	}
+
 	static function sortByIndexAsc($index,$array)
 	{
 		return usort( $array, function($a,$b) use($index ){
