@@ -142,7 +142,6 @@ class RestController
 		return $text;
 	}
 
-
 	function getMethodParams()
 	{
 		if( $this->method_params !== null )

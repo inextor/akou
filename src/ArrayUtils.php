@@ -128,7 +128,6 @@ class ArrayUtils
 
 	static function getItemsProperties()
 	{
-
 		$args= func_get_args();
 		return static::itemsPropertiesToArrays( ...$args);
 	}
@@ -191,19 +190,19 @@ class ArrayUtils
 		{
 			foreach(array_keys($array) as $key)
 			{
-				if( in_array(  $array[$key][$index] , $array_values) )
+				if( in_array( $array[$key][$index] , $array_values) )
 					$newarray[$key] = $array[$key];
 			}
 		}
 		return $newarray;
 	}
 	/*
-	  results = array(
-		   0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
-		   1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
+		results = array(
+			0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
+			1 => array('key1' => '12', 'key2' => 22, 'key3' => 32	)
 		);
 
-	  $nResults = filter_by_value($results, 'key2', '2');
+		$nResults = filter_by_value($results, 'key2', '2');
 
 
 	Output :
