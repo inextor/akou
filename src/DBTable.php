@@ -1745,13 +1745,13 @@ class DBTable
 		}
 	}
 
-	public static function getAll(array $searchKeys,bool $dictionary_index=FALSE,bool $for_update = FALSE,int | FALSE $limit=FALSE ):Array
+	public static function getAll($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE )
 	{
 		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
 		return static::getArrayFromQuery( $sql, $dictionary_index );
 	}
 
-	public static function getAllAsDictionary(array $searchKeys,bool $dictionary_index=FALSE,bool $for_update = FALSE,int | FALSE $limit=FALSE ):Array
+	public static function getAllAsDictionary($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE )
 	{
 		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
 		return DBTable::getArrayFromQuery( $sql, $dictionary_index );
