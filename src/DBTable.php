@@ -357,6 +357,7 @@ class DBTable
 			{
 				switch( $type )
 				{
+					case 245: //json
 					case 252: //json
 						if( strpos($name,"json") === 0 )
 						{
@@ -1439,7 +1440,6 @@ class DBTable
 				$phpCode .= '	var $'.$field.';'.PHP_EOL;
 			}
 
-
 			$phpCode .= '}'.PHP_EOL;
 		}
 
@@ -1759,7 +1759,6 @@ class DBTable
 
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
 	{
-
 		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
 
 		return $as_objects
