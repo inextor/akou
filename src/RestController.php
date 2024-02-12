@@ -4,6 +4,12 @@ namespace AKOU;
 
 class RestController
 {
+	var $allow_credentials;
+	var $method_params;
+	var $response;
+	var $cors;
+
+
 	function __construct()
 	{
 		$this->response = "";
@@ -99,7 +105,7 @@ class RestController
 			{
 				$this->{$method}();
 
-				if( !empty( $this->response  ) )
+				if( !empty( $this->response	) )
 				{
 
 				}
@@ -197,7 +203,7 @@ class RestController
 	function json($result,$flag=null)
 	{
 		// error_log( "JSON()".print_r( $result,true) );
-		$this->response = empty( $flag ) ?  json_encode( $result ) : json_encode( $result, $flag );
+		$this->response = empty( $flag ) ?	json_encode( $result ) : json_encode( $result, $flag );
 		//error_log("THIS RESPONSE".$this->response );
 		//error_log('Hader Content-length: '.strlen( $this->response ));
 		header('Content-length: '.strlen( $this->response ) );
