@@ -271,7 +271,7 @@ class DBTable
 			(
 				Utils::LOG_LEVEL_ERROR,
 				'DBTable::query',
-				'Error with query -->'.$query.'<--- '.$conn->error
+				'Error with query -->'.$sql_query.'<--- '.self::$connection->error
 			);
 		}
 		return $result;
