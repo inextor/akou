@@ -400,17 +400,33 @@ class DBTable
 		$asArray	= $className === 'DBTable';
 
 		$conn	= $connection ?: self::$connection;
-		$resSql = $conn->query( $sql );
 
-		if( !$resSql )
+		try
+		{
+			$resSql = $conn->query( $sql );
+
+			if( !$resSql )
+			{
+				Utils::addLog
+				(
+					Utils::LOG_LEVEL_ERROR,
+					'DBTable::getArrayFromQuery',
+					'Error with query -->'.$sql.'<--- '.$conn->error
+				);
+
+				throw new SystemException( 'An error occours please try gain later', $sql );
+			}
+		}
+		catch(\Exception $e)
 		{
 			Utils::addLog
 			(
 				Utils::LOG_LEVEL_ERROR,
 				'DBTable::getArrayFromQuery',
-				'Error with query -->'.$sql.'<--- '.$conn->error
+				'Error with query -->'.$sql.'<--- '.$e->getMessage()
 			);
-			throw new SystemException( 'An error occours please try gain later', $sql );
+
+			throw new SystemException('An error occours please try gain later', $sql );
 		}
 
 		$result = array();
@@ -668,7 +684,6 @@ class DBTable
 	function insertDb( $ignore = FALSE )
 	{
 		$this->_lastQuery	= $this->getInsertSql( $ignore );
-
 		$result = false;
 
 		try
@@ -677,7 +692,7 @@ class DBTable
 		}
 		catch(\Exception $e)
 		{
-
+			error_log('Exception in  '.$this->_lastQuery );
 		}
 
 		$this->logSqlError();
@@ -686,6 +701,7 @@ class DBTable
 
 		if( $result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
+			error_log('Agregando id');
 			$this->id = $this->_conn->insert_id;
 		}
 
@@ -1547,7 +1563,6 @@ class DBTable
 	public static function searchFirst( $searchKeys, $as_objects=TRUE, $for_update = false )
 	{
 		$sql	= static::getSearchSql( $searchKeys, $for_update, 1 );
-
 		return static::getFirstFromSql( $sql, $as_objects );
 	}
 
