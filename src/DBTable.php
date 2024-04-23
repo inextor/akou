@@ -17,8 +17,8 @@ class DBTable
 	const LIKE_SYMBOL='~~';
 	const CSV_SYMBOL=',';
 	const LT_SYMBOL='<';
-	const LE_SYMBOL='<~=';
-	const GE_SYMBOL='>~=';
+	const LE_SYMBOL='<~';
+	const GE_SYMBOL='>~';
 	const EQ_SYMBOL='';
 	const GT_SYMBOL='>';
 	const NOT_NULL_SYMBOL = '@';
@@ -788,6 +788,7 @@ class DBTable
 					{
 						$array_values[] = '"'.$this->escape( json_encode( $this->{$name}) ).'"';
 						$array_fields[] = '`'.$name.'`';
+						error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
 
 						continue;
 					}
@@ -799,6 +800,7 @@ class DBTable
 					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
 					$array_fields[] = '`'.$name.'`';
+					error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
 					continue;
 				}
 
@@ -817,6 +819,8 @@ class DBTable
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
+
+						UTILS::addLog(Utils::LOG_LEVEL_DEBUG,'DBTABLE', 'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->${name}, true ) );
 						$this->{$name}	= '';
 						$array_values[] = '""';
 						$array_fields[] = '`'.$name.'`';
@@ -859,6 +863,13 @@ class DBTable
 				{
 					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
+
+					UTILS::addLog
+					(
+						Utils::LOG_LEVEL_DEBUG,
+						'DBTABLE',
+						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->${name}, true )
+					);
 				}
 				else if( $value	=== '' )
 				{
@@ -874,6 +885,14 @@ class DBTable
 					}
 
 					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value ). '"';
+
+					UTILS::addLog
+					(
+						Utils::LOG_LEVEL_DEBUG,
+						'DBTABLE',
+						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->{$name}, true )
+					);
+
 				}
 			}
 		}
