@@ -1608,6 +1608,26 @@ class DBTable
 			error_log('No mysql connection set');
 		}
 
+		$where_str = static::getWhereConstraintsString( $array );
+
+		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.( $where_str?:'1') ;
+
+		if( $limit && is_int( $limit) )
+			$sql .= ' LIMIT '.intval( $limit ).' ';
+
+		if( $for_update )
+			$sql .= ' FOR UPDATE ';
+
+		return $sql;
+	}
+
+	public static function getWhereConstraintsString($array)
+	{
+		if( DBTable::$connection == NULL )
+		{
+			error_log('No mysql connection set');
+		}
+
 		$properties = static::getAllProperties();
 		$props = array
 		(
@@ -1749,18 +1769,8 @@ class DBTable
 			}
 		}
 
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
-
-		if( $limit && is_int( $limit) )
-			$sql .= ' LIMIT '.intval( $limit ).' ';
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
-
-
-
-		return $sql;
+		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '';
+		return $where_str;
 	}
 
 	public function trimValues()
@@ -1854,5 +1864,39 @@ class DBTable
 	public function getError()
 	{
 		return $this->_conn->error;
+	}
+
+	public static function getUpdateAllSql($field_values, $search_array)
+	{
+		if (DBTable::$connection == NULL)
+		{
+			error_log('No mysql connection set');
+		}
+
+		$valid_properties = static::getAllProperties(); // Get valid fields
+
+		// 1. Build SET Clause (fields to update)
+		$set_clauses = [];
+
+		foreach ($field_values as $field => $value)
+		{
+			if (!in_array($field, $valid_properties))
+			{
+				error_log("Invalid field: $field"); // Log an error or throw an exception
+				continue; // Skip the invalid field
+			}
+			$set_clauses[] = "`$field` = " . DBTable::escape($value);
+		}
+
+		$set_string = implode(", ", $set_clauses);
+
+		// 2. Build WHERE Clause (search conditions)
+		//   (Re-use existing getSearchSql logic)
+		$where_string = 'WHERE '.static::getWhereConstraintsString($search_array);
+
+		// 3. Construct Complete SQL
+		$sql = "UPDATE `" . self::getBaseClassName() . "` SET $set_string $where_string";
+
+		return $sql;
 	}
 }
