@@ -868,7 +868,7 @@ class DBTable
 					(
 						Utils::LOG_LEVEL_DEBUG,
 						'DBTABLE',
-						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->${name}, true )
+						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->{$name}, true )
 					);
 				}
 				else if( $value	=== '' )
