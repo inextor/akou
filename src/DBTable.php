@@ -788,8 +788,7 @@ class DBTable
 					{
 						$array_values[] = '"'.$this->escape( json_encode( $this->{$name}) ).'"';
 						$array_fields[] = '`'.$name.'`';
-						error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
-
+						//error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
 						continue;
 					}
 				}
@@ -1601,7 +1600,7 @@ class DBTable
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	public static function getSearchSql( $searchKeys, $for_update = FALSE )
 	*/
-	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE )
+	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE, $csv_sort_string = '' )
 	{
 		if( DBTable::$connection == NULL )
 		{
@@ -1619,6 +1618,59 @@ class DBTable
 			$sql .= ' FOR UPDATE ';
 
 		return $sql;
+	}
+
+	public static function getSortOrderString($sort_value, $extra_sort=array() )
+	{
+		if( empty( trim( $sort_value) ) )
+			return '';
+
+		$properties = static::getAllProperties();
+
+		$elements = explode(',', $sort_value );
+		$sort_array = array();
+
+		foreach($elements as $s_field)
+		{
+
+			$sort_field = $s_field;
+			$minus_sign = '';
+
+			if (preg_match('/^-/', $sort_field))
+			{
+				// Remove the hyphen
+				$sort_field = ltrim($s_field,'-');
+				$minus_sign= '-';
+			}
+
+			$tokens = explode('_', $sort_field);
+			$parts = explode('_', $sort_field);
+			$last = array_pop($parts);
+			$tokens = array(implode('_', $parts), $last);
+
+			if( count( $tokens) !== 2 )
+				continue;
+
+			$direction = $tokens[1];
+
+			if( $direction === 'ASC' || $direction ==='DESC')
+			{
+				$property = $tokens[0];
+
+				if(in_array( $property, $properties, TRUE ) )
+				{
+					$sort_array[] = $minus_sign.'`'.$table_name.'`.'.$property.' '.$direction;
+				}
+				else if( in_array($property, $extra_sort ) )
+				{
+					$sort_array[] = $minus_sign.$property.' '.$direction;
+				}
+			}
+		}
+		if( empty( $sort_array ) )
+			return '';
+
+		return ' ORDER BY '.join(',',$sort_array).PHP_EOL;
 	}
 
 	public static function getWhereConstraintsString($array)
@@ -1789,21 +1841,21 @@ class DBTable
 		}
 	}
 
-	public static function getAll($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE )
+	public static function getAll($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE,$csv_sort_string = '')
 	{
-		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
 		return static::getArrayFromQuery( $sql, $dictionary_index );
 	}
 
-	public static function getAllAsDictionary($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE )
+	public static function getAllAsDictionary($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE, $csv_sort_string = '')
 	{
-		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
 		return DBTable::getArrayFromQuery( $sql, $dictionary_index );
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
+	public static function search( $searchKeys, $as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE, $csv_sort_string = '')
 	{
-		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
