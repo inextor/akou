@@ -1578,9 +1578,9 @@ class DBTable
 		return static::searchFirst( $searchKeys, $as_objects, $for_update );
 	}
 
-	public static function searchFirst( $searchKeys, $as_objects=TRUE, $for_update = false )
+	public static function searchFirst( $searchKeys, $as_objects=TRUE, $for_update = false, $csv_sort_string = '' )
 	{
-		$sql	= static::getSearchSql( $searchKeys, $for_update, 1 );
+		$sql	= static::getSearchSql( $searchKeys, $for_update, 1, $csv_sort_string);
 		return static::getFirstFromSql( $sql, $as_objects );
 	}
 
@@ -1610,6 +1610,9 @@ class DBTable
 		$where_str = static::getWhereConstraintsString( $array );
 
 		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.( $where_str?:'1') ;
+
+		if( $csv_sort_string )
+			$sql .= ' '.static::getSortOrderString( $csv_sort_string );
 
 		if( $limit && is_int( $limit) )
 			$sql .= ' LIMIT '.intval( $limit ).' ';
