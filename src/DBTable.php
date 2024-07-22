@@ -1632,6 +1632,7 @@ class DBTable
 
 		$elements = explode(',', $sort_value );
 		$sort_array = array();
+		$table_name = self::getBaseClassName();
 
 		foreach($elements as $s_field)
 		{
