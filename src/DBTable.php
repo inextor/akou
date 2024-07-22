@@ -1889,6 +1889,11 @@ class DBTable
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
 
+			if( strpos( $name, 'json', 0 ) === 0 )
+			{
+				continue;
+			}
+
 			$trimValue = $trimValues || $value === null ? $value : trim( $value );
 
 			if( empty( $trimValue ) )
