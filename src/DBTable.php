@@ -701,7 +701,7 @@ class DBTable
 
 		if( $result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
-			error_log('Agregando id');
+			//error_log('Agregando id');
 			$this->id = $this->_conn->insert_id;
 		}
 
@@ -1632,7 +1632,6 @@ class DBTable
 
 		$elements = explode(',', $sort_value );
 		$sort_array = array();
-		$table_name = self::getBaseClassName();
 
 		foreach($elements as $s_field)
 		{
