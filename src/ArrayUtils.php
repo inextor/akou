@@ -53,6 +53,11 @@ class ArrayUtils
 		return $result;
 	}
 
+	static function groupBy($array,$prop)
+	{
+		return static::groupByProperty($array, $prop );
+	}
+
 	static function groupByIndex($array,$prop)
 	{
 		return static::groupByProperty($array, $prop );
