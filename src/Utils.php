@@ -22,7 +22,7 @@ class Utils
 
 	const GENERIC_MESSAGE_ERROR		= '';
 
-	public static $LOG_LEVEL			= self::LOG_LEVEL_DEBUG;//
+	public static $LOG_LEVEL			= self::LOG_LEVEL_WARN;//
 	public static $DB_MAX_LOG_LEVEL		= self::LOG_LEVEL_DEBUG;
 	public static $DEBUG_SERVER			= FALSE;
 	public static $DEBUG_VIA_ERROR_LOG	= FALSE;
@@ -264,7 +264,7 @@ class Utils
 		\curl_setopt( $ch, CURLOPT_HEADER, 1 );
 		\curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
 
-		$result 		= \curl_exec($ch);
+		$result		= \curl_exec($ch);
 		$header_size	= \curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
 		$header			= \substr($result, 0, $header_size);

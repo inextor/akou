@@ -17,8 +17,8 @@ class DBTable
 	const LIKE_SYMBOL='~~';
 	const CSV_SYMBOL=',';
 	const LT_SYMBOL='<';
-	const LE_SYMBOL='<~=';
-	const GE_SYMBOL='>~=';
+	const LE_SYMBOL='<~';
+	const GE_SYMBOL='>~';
 	const EQ_SYMBOL='';
 	const GT_SYMBOL='>';
 	const NOT_NULL_SYMBOL = '@';
@@ -271,7 +271,7 @@ class DBTable
 			(
 				Utils::LOG_LEVEL_ERROR,
 				'DBTable::query',
-				'Error with query -->'.$query.'<--- '.$conn->error
+				'Error with query -->'.$sql_query.'<--- '.self::$connection->error
 			);
 		}
 		return $result;
@@ -357,6 +357,17 @@ class DBTable
 			{
 				switch( $type )
 				{
+					case 245: //json en otra parte
+					case 252: //json
+						if( strpos($name,"json") === 0 )
+						{
+							$result[ $name ] = $row[$name] == null ? null : json_decode( $row[$name] );
+						}
+						else
+						{
+							$result[ $name ] = $row[ $name ];
+						}
+						break;
 					case 16: //bit
 					case 1: //tinyint bool
 					case 2: //smallint
@@ -389,17 +400,33 @@ class DBTable
 		$asArray	= $className === 'DBTable';
 
 		$conn	= $connection ?: self::$connection;
-		$resSql = $conn->query( $sql );
 
-		if( !$resSql )
+		try
+		{
+			$resSql = $conn->query( $sql );
+
+			if( !$resSql )
+			{
+				Utils::addLog
+				(
+					Utils::LOG_LEVEL_ERROR,
+					'DBTable::getArrayFromQuery',
+					'Error with query -->'.$sql.'<--- '.$conn->error
+				);
+
+				throw new SystemException( 'An error occours please try gain later', $sql );
+			}
+		}
+		catch(\Exception $e)
 		{
 			Utils::addLog
 			(
 				Utils::LOG_LEVEL_ERROR,
 				'DBTable::getArrayFromQuery',
-				'Error with query -->'.$sql.'<--- '.$conn->error
+				'Error with query -->'.$sql.'<--- '.$e->getMessage()
 			);
-			throw new SystemException( 'An error occours please try gain later', $sql );
+
+			throw new SystemException('An error occours please try gain later', $sql );
 		}
 
 		$result = array();
@@ -561,7 +588,6 @@ class DBTable
 	function setWhereStringNonEmptyValues()
 	{
 		$cmp_a			= array();
-
 		$name_class= get_class($this);
 
 		foreach ( $this as $name => $value )
@@ -606,7 +632,7 @@ class DBTable
 		{
 			if(
 				//!(isset( $array[ $name ] ) && !is_null( $array[ $name ] ) )
-				!( array_key_exists($name,  $array ) )
+				!( array_key_exists($name, $array ) )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| !property_exists( $class_name, $name )
 			)
@@ -636,6 +662,8 @@ class DBTable
 		$_obj->assignFromArray( $array );
 		if( $_obj->insertDb() )
 			return $_obj;
+		$this->logSqlError();
+
 		return NULL;
 	}
 
@@ -656,7 +684,6 @@ class DBTable
 	function insertDb( $ignore = FALSE )
 	{
 		$this->_lastQuery	= $this->getInsertSql( $ignore );
-
 		$result = false;
 
 		try
@@ -665,7 +692,7 @@ class DBTable
 		}
 		catch(\Exception $e)
 		{
-
+			error_log('Exception in  '.$this->_lastQuery );
 		}
 
 		$this->logSqlError();
@@ -674,8 +701,10 @@ class DBTable
 
 		if( $result && property_exists( $class_name, 'id' ) && empty( $this->id ) )
 		{
+			//error_log('Agregando id');
 			$this->id = $this->_conn->insert_id;
 		}
+
 		$this->setWhereString();
 		return $result;
 	}
@@ -688,6 +717,8 @@ class DBTable
 			error_log( $this->_conn->error );
 			$class_name		= get_class( $this );
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
+
+			error_log('Error in '.$class_name );
 
 			if( $this->_is_duplicated_error )
 			{
@@ -751,12 +782,24 @@ class DBTable
 					}
 				}
 
+				if( strpos($name, 'json', 0 ) === 0 )
+				{
+					if( $this->{ $name } !== null )
+					{
+						$array_values[] = '"'.$this->escape( json_encode( $this->{$name}) ).'"';
+						$array_fields[] = '`'.$name.'`';
+						//error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
+						continue;
+					}
+				}
+
 				/* HAS PRECENDENCE OVER IGNORE_ON_INSERT */
 				if( ( $attr_flags & DBTable::TIMESTAMP_ON_CREATE ) != 0 )
 				{
 					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
 					$array_fields[] = '`'.$name.'`';
+					error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
 					continue;
 				}
 
@@ -775,6 +818,8 @@ class DBTable
 				{
 					if( ($attr_flags & DBTable::INSERT_EMPTY_DEFAULT) != 0 )
 					{
+
+						UTILS::addLog(Utils::LOG_LEVEL_DEBUG,'DBTABLE', 'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->${name}, true ) );
 						$this->{$name}	= '';
 						$array_values[] = '""';
 						$array_fields[] = '`'.$name.'`';
@@ -817,6 +862,13 @@ class DBTable
 				{
 					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
+
+					UTILS::addLog
+					(
+						Utils::LOG_LEVEL_DEBUG,
+						'DBTABLE',
+						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->{$name}, true )
+					);
 				}
 				else if( $value	=== '' )
 				{
@@ -832,6 +884,14 @@ class DBTable
 					}
 
 					$array_values[] = '"'.$this->_conn->real_escape_string( $new_value ). '"';
+
+					UTILS::addLog
+					(
+						Utils::LOG_LEVEL_DEBUG,
+						'DBTABLE',
+						'Adding empty default for $'.$class_name.'->'.$name.' with value'.print_r( $this->{$name}, true )
+					);
+
 				}
 			}
 		}
@@ -965,6 +1025,15 @@ class DBTable
 					else
 					{
 						$attr_flags			= $arrayFlags[ $name ];
+					}
+				}
+
+				if( strpos($name, 'json', 0 ) === 0 )
+				{
+					if( $this->{ $name } !== null )
+					{
+						$update_array[] = '`'.$name.'`="'.$this->escape( json_encode( $this->{$name}) ).'"';
+						continue;
 					}
 				}
 
@@ -1169,7 +1238,7 @@ class DBTable
 		{
 
 			if(
-				!array_key_exists(  $name ,$array )
+				!array_key_exists( $name ,$array )
 				|| in_array( $name, DBTable::$_control_variable_names )
 				|| in_array( $name, $indexes )
 			)
@@ -1218,7 +1287,6 @@ class DBTable
 					'There is no property key "'.$key.'" in table '.$class_name.' report to developer inmediately '
 				);
 			}
-
 
 			$attr_flags			= 0;
 			$validation_value	= array();
@@ -1406,11 +1474,10 @@ class DBTable
 				$phpCode .= '	var $'.$field.';'.PHP_EOL;
 			}
 
-
 			$phpCode .= '}'.PHP_EOL;
 		}
 
-		eval( $phpCode ); //The evil one
+		//eval( $phpCode ); //The evil one
 		return $phpCode;
 	}
 
@@ -1480,7 +1547,12 @@ class DBTable
 	public static function get($id, $for_update = FALSE )
 	{
 		$obj = new static();
-		$obj->id = $id;
+		//if( property_exists($obj, 'id') )
+		//{
+		//	throw new ValidationException('el attributo id no existe en el objeto');
+		//}
+
+		$obj->{'id'} = $id;
 		if( $obj->load( true, $for_update ) )
 		{
 			return $obj;
@@ -1506,9 +1578,9 @@ class DBTable
 		return static::searchFirst( $searchKeys, $as_objects, $for_update );
 	}
 
-	public static function searchFirst($searchKeys,$as_objects=TRUE, $for_update = false )
+	public static function searchFirst( $searchKeys, $as_objects=TRUE, $for_update = false, $csv_sort_string = '' )
 	{
-		$sql	= static::getSearchSql($searchKeys, $for_update, 1 );
+		$sql	= static::getSearchSql( $searchKeys, $for_update, 1, $csv_sort_string);
 		return static::getFirstFromSql( $sql, $as_objects );
 	}
 
@@ -1523,12 +1595,90 @@ class DBTable
 	}
 
 	/*
-	*   searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
+	*	searchFullComparison(array('user_id'.DBTABLE::NOT_NULL_SYMBOL => true, 'size>':12, 'age<=':18,'name$':' leon', 'name^':'next'));
 	*
 	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE )
 	public static function getSearchSql( $searchKeys, $for_update = FALSE )
 	*/
-	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE )
+	public static function getSearchSql( $array, $for_update=FALSE, $limit=FALSE, $csv_sort_string = '' )
+	{
+		if( DBTable::$connection == NULL )
+		{
+			error_log('No mysql connection set');
+		}
+
+		$where_str = static::getWhereConstraintsString( $array );
+
+		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.( $where_str?:'1') ;
+
+		if( $csv_sort_string )
+			$sql .= ' '.static::getSortOrderString( $csv_sort_string );
+
+		if( $limit && is_int( $limit) )
+			$sql .= ' LIMIT '.intval( $limit ).' ';
+
+		if( $for_update )
+			$sql .= ' FOR UPDATE ';
+
+		return $sql;
+	}
+
+	public static function getSortOrderString($sort_value, $extra_sort=array() )
+	{
+		if( empty( trim( $sort_value) ) )
+			return '';
+
+		$properties = static::getAllProperties();
+
+		$elements = explode(',', $sort_value );
+		$sort_array = array();
+
+		$table_name = self::getBaseClassName();
+
+		foreach($elements as $s_field)
+		{
+
+			$sort_field = $s_field;
+			$minus_sign = '';
+
+			if (preg_match('/^-/', $sort_field))
+			{
+				// Remove the hyphen
+				$sort_field = ltrim($s_field,'-');
+				$minus_sign= '-';
+			}
+
+			$tokens = explode('_', $sort_field);
+			$parts = explode('_', $sort_field);
+			$last = array_pop($parts);
+			$tokens = array(implode('_', $parts), $last);
+
+			if( count( $tokens) !== 2 )
+				continue;
+
+			$direction = $tokens[1];
+
+			if( $direction === 'ASC' || $direction ==='DESC')
+			{
+				$property = $tokens[0];
+
+				if(in_array( $property, $properties, TRUE ) )
+				{
+					$sort_array[] = $minus_sign.'`'.$table_name.'`.'.$property.' '.$direction;
+				}
+				else if( in_array($property, $extra_sort ) )
+				{
+					$sort_array[] = $minus_sign.$property.' '.$direction;
+				}
+			}
+		}
+		if( empty( $sort_array ) )
+			return '';
+
+		return ' ORDER BY '.join(',',$sort_array).PHP_EOL;
+	}
+
+	public static function getWhereConstraintsString($array)
 	{
 		if( DBTable::$connection == NULL )
 		{
@@ -1598,7 +1748,7 @@ class DBTable
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
 			elseif( in_array( $key, $valid_keys ) )
 			{
-				if( static::endsWith(  $key, DBTable::LIKE_SYMBOL ) )
+				if( static::endsWith( $key, DBTable::LIKE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LIKE_SYMBOL, "", $key );
 					$constraints[] = '`'.$f_key.'` LIKE "%'.static::escape( $array[ $key ] ).'%"';
@@ -1671,23 +1821,13 @@ class DBTable
 			}
 			else
 			{
-				$backtrace	= debug_backtrace(  );
+				$backtrace	= debug_backtrace();
 				error_log('Key "'.$key.'" is not a comparison property, File'.$backtrace[1]['file'].'::'.$backtrace[1]['function'].' at line'.$backtrace[1]['line']);
 			}
 		}
 
-		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '1';
-		$sql = 'SELECT * FROM `'.self::getBaseClassName().'` WHERE '.$where_str ;
-
-		if( $limit && is_int( $limit) )
-			$sql .= ' LIMIT '.intval( $limit ).' ';
-
-		if( $for_update )
-			$sql .= ' FOR UPDATE ';
-
-
-
-		return $sql;
+		$where_str = count( $constraints ) > 0 ? join(' AND ',$constraints ) : '';
+		return $where_str;
 	}
 
 	public function trimValues()
@@ -1706,10 +1846,21 @@ class DBTable
 		}
 	}
 
-	public static function search($searchKeys,$as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE )
+	public static function getAll($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE,$csv_sort_string = '')
 	{
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
+		return static::getArrayFromQuery( $sql, $dictionary_index );
+	}
 
-		$sql = static::getSearchSql($searchKeys, $for_update, $limit);
+	public static function getAllAsDictionary($searchKeys,$dictionary_index=FALSE,$for_update = FALSE,$limit=FALSE, $csv_sort_string = '')
+	{
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
+		return DBTable::getArrayFromQuery( $sql, $dictionary_index );
+	}
+
+	public static function search( $searchKeys, $as_objects=TRUE, $dictionary_index =FALSE, $for_update = FALSE, $limit=FALSE, $csv_sort_string = '')
+	{
+		$sql = static::getSearchSql($searchKeys, $for_update, $limit, $csv_sort_string);
 
 		return $as_objects
 			? static::getArrayFromQuery( $sql, $dictionary_index )
@@ -1739,6 +1890,11 @@ class DBTable
 		{
 			if( in_array( $name, DBTable::$_control_variable_names ) )
 				continue;
+
+			if( strpos( $name, 'json', 0 ) === 0 )
+			{
+				continue;
+			}
 
 			$trimValue = $trimValues || $value === null ? $value : trim( $value );
 
@@ -1770,5 +1926,39 @@ class DBTable
 	public function getError()
 	{
 		return $this->_conn->error;
+	}
+
+	public static function getUpdateAllSql($field_values, $search_array)
+	{
+		if (DBTable::$connection == NULL)
+		{
+			error_log('No mysql connection set');
+		}
+
+		$valid_properties = static::getAllProperties(); // Get valid fields
+
+		// 1. Build SET Clause (fields to update)
+		$set_clauses = [];
+
+		foreach ($field_values as $field => $value)
+		{
+			if (!in_array($field, $valid_properties))
+			{
+				error_log("Invalid field: $field"); // Log an error or throw an exception
+				continue; // Skip the invalid field
+			}
+			$set_clauses[] = "`$field` = " . DBTable::escape($value);
+		}
+
+		$set_string = implode(", ", $set_clauses);
+
+		// 2. Build WHERE Clause (search conditions)
+		//   (Re-use existing getSearchSql logic)
+		$where_string = 'WHERE '.static::getWhereConstraintsString($search_array);
+
+		// 3. Construct Complete SQL
+		$sql = "UPDATE `" . self::getBaseClassName() . "` SET $set_string $where_string";
+
+		return $sql;
 	}
 }

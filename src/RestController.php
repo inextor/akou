@@ -4,6 +4,12 @@ namespace AKOU;
 
 class RestController
 {
+	var $allow_credentials;
+	var $method_params;
+	var $response;
+	var $cors;
+
+
 	function __construct()
 	{
 		$this->response = "";
@@ -79,17 +85,36 @@ class RestController
 
 		if( $method === "get" || $method === "head" )
 		{
-			if( !method_exists( $this, $method) )
+			try
 			{
-				$this->sendStatus(404)->text('Document not found');
-			}
-			else
-			{
-				$this->get();
-			}
+				if( !method_exists( $this, $method) )
+				{
+					$this->sendStatus(404)->text('Document not found');
+				}
+				else
+				{
+					$this->get();
+				}
 
-			if( $method !== "head" )
+				if( $method !== "head" )
+				{
+					echo $this->response;
+				}
+			}
+			catch(\Exception $e)
 			{
+
+				$code = $e->getCode();
+
+				if( $code >= 100 && $code < 600 )
+				{
+					$this->sendStatus( $code )->json($e->getMessage());
+				}
+				else
+				{
+					//Status code is not a valid HTTP status code
+					$this->sendStatus(500)->json( $e->getMessage() );
+				}
 				echo $this->response;
 			}
 		}
@@ -99,10 +124,12 @@ class RestController
 			{
 				$this->{$method}();
 
-				if( !empty( $this->response  ) )
+				if( !empty( $this->response	) )
 				{
 
+
 				}
+
 				echo $this->response;
 				return;
 			}
@@ -112,12 +139,14 @@ class RestController
 
 				if( $code >= 100 && $code < 600 )
 				{
+					error_log('RC:'.$e->getMessage() );
 					$this->sendStatus( $code )->json($e->getMessage());
 				}
 				else
 				{
 					$this->sendStatus(500)->json( $e->getMessage() );
 				}
+				echo $this->response;
 			}
 		}
 		else
@@ -141,7 +170,6 @@ class RestController
 		header('Content-length: '.strlen( $this->response ) );
 		return $text;
 	}
-
 
 	function getMethodParams()
 	{
@@ -197,8 +225,7 @@ class RestController
 
 	function json($result,$flag=null)
 	{
-		// error_log( "JSON()".print_r( $result,true) );
-		$this->response = empty( $flag ) ?  json_encode( $result ) : json_encode( $result, $flag );
+		$this->response = empty( $flag ) ?	json_encode( $result ) : json_encode( $result, $flag );
 		//error_log("THIS RESPONSE".$this->response );
 		//error_log('Hader Content-length: '.strlen( $this->response ));
 		header('Content-length: '.strlen( $this->response ) );

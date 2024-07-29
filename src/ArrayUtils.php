@@ -133,7 +133,6 @@ class ArrayUtils
 
 	static function getItemsProperties()
 	{
-
 		$args= func_get_args();
 		return static::itemsPropertiesToArrays( ...$args);
 	}
@@ -188,7 +187,6 @@ class ArrayUtils
 		return $result();
 	}
 
-
 	static function filterByMultipleValues($array, $index, $array_values )
 	{
 		$newarray = array();
@@ -206,10 +204,10 @@ class ArrayUtils
 	/*
 		results = array(
 			0 => array('key1' => '1', 'key2' => 2, 'key3' => 3),
-			1 => array('key1' => '12', 'key2' => 22, 'key3' => 32)
+			1 => array('key1' => '12', 'key2' => 22, 'key3' => 32	)
 		);
 
-		nResults = filter_by_value($results, 'key2', '2');
+		$nResults = filter_by_value($results, 'key2', '2');
 
 
 	Output :
