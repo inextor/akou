@@ -214,9 +214,21 @@ class DBTable
 		return $rowData[ $keys[0] ];
 	}
 
+	public static function getAllProps()
+	{
+		$args = func_get_args();
+		return static::getAllProperties();
+	}
+
 	public static function getAllProperties()
 	{
 		$args= func_get_args();
+		return static::getAllPropertiesExcept( ...$args );
+	}
+
+	public static function getAllPropsExcept()
+	{
+		$args = func_get_args();
 		return static::getAllPropertiesExcept( ...$args );
 	}
 
@@ -1960,5 +1972,3 @@ class DBTable
 		$sql = "UPDATE `" . self::getBaseClassName() . "` SET $set_string $where_string";
 
 		return $sql;
-	}
-}
