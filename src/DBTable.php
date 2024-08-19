@@ -1972,3 +1972,5 @@ class DBTable
 		$sql = "UPDATE `" . self::getBaseClassName() . "` SET $set_string $where_string";
 
 		return $sql;
+	}
+}
