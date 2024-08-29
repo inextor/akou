@@ -214,6 +214,11 @@ class DBTable
 		return $rowData[ $keys[0] ];
 	}
 
+	public static function getProperties()
+	{
+		return static::getAllProperties();
+	}
+
 	public static function getAllProps()
 	{
 		$args = func_get_args();
@@ -257,8 +262,6 @@ class DBTable
 	{
 		$mysqli		= empty( $conn ) ? self::$connection : $conn;
 		$resTotal	= $mysqli->query( 'SELECT FOUND_ROWS()' );
-
-
 
 		if( !$resTotal )
 		{
@@ -687,13 +690,21 @@ class DBTable
 		return $_obj;
 	}
 
-	function insert()
+	function insert($ignore = false)
 	{
-		$args = func_get_args();
-		return $this->insertDb( ...$args );
+		error_log('DENTRO DE LA LLAMAMADA');
+		if( $ignore )
+		{
+			error_log('IGNORE MTF');
+		}
+		else
+		{
+			error_log('Why are you ingoring me MTF?');
+		}
+		return $this->insertDb( $ignore );
 	}
 
-	function insertDb( $ignore = FALSE )
+	function insertDb( $ignore = false )
 	{
 		$this->_lastQuery	= $this->getInsertSql( $ignore );
 		$result = false;
@@ -1972,5 +1983,36 @@ class DBTable
 		$sql = "UPDATE `" . self::getBaseClassName() . "` SET $set_string $where_string";
 
 		return $sql;
+	}
+
+	/*
+	* $anything can be a string or an array
+	* $log_type can be json or print_r
+	*/
+	public static function logToFile($file_name, $anything, $log_type = 'json')
+	{
+		try
+		{
+
+			$string_to_save = $log_type =='json' 
+				? json_encode( $anything, JSON_PRETTY_PRINT )
+				: print_r( $anything, TRUE );
+
+			$values = file_put_contents( $file_name, $string_to_save, FILE_APPEND | FILE_USE_INCLUDE_PATH );
+
+			if( $values )
+			{
+				error_log('BYTES WRITEN '.$values);
+			}
+			else
+			{
+				error_log('Fail to write'.$values);
+			}
+		}
+		catch(\Exception $e)
+		{
+			error_log('Fail to write'.$values);
+			//Do nothing
+		}
 	}
 }
