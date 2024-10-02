@@ -692,7 +692,7 @@ class DBTable
 
 	function insert($ignore = false)
 	{
-		error_log('DENTRO DE LA LLAMAMADA');
+		/*error_log('DENTRO DE LA LLAMAMADA');
 		if( $ignore )
 		{
 			error_log('IGNORE MTF');
@@ -701,10 +701,11 @@ class DBTable
 		{
 			error_log('Why are you ingoring me MTF?');
 		}
+		*/
 		return $this->insertDb( $ignore );
 	}
 
-	function insertDb( $ignore = false )
+	function insertDb( $ignore = FALSE )
 	{
 		$this->_lastQuery	= $this->getInsertSql( $ignore );
 		$result = false;
@@ -1994,7 +1995,7 @@ class DBTable
 		try
 		{
 
-			$string_to_save = $log_type =='json' 
+			$string_to_save = $log_type =='json'
 				? json_encode( $anything, JSON_PRETTY_PRINT )
 				: print_r( $anything, TRUE );
 
