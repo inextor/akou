@@ -197,12 +197,14 @@ class RestController
 			return $this->method_params;
 		}
 
-		if( !empty( $_POST ) )
+		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
+
+		if( $method == "post" && !empty( $_POST ) )
 		{
 			$this->method_params = $_POST;
 			return $this->method_params;
 		}
-
+		
 		if( !empty( $_GET ) )
 		{
 			$this->method_params = $_GET;
