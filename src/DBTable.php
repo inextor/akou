@@ -733,6 +733,11 @@ class DBTable
 		return $result;
 	}
 
+	function isDuplicatedError()
+	{
+		return $this->_is_duplicated_error;
+	}
+
 	function logSqlError()
 	{
 
@@ -1372,7 +1377,7 @@ class DBTable
 			{
 				throw new ValidationException
 				(
-					$alternateMsg.'The maximun value for '.$key.' is '.$params[ 'min' ]
+					$alternateMsg.'The maximun value for '.$key.' is '.$params[ 'max' ]
 				);
 			}
 		}
@@ -1389,7 +1394,7 @@ class DBTable
 			{
 				throw new ValidationException
 				(
-					$altMessage.'The maximun value for '.$key.' is '.$params[ 'min' ]
+					$altMessage.'The maximun value for '.$key.' is '.$params[ 'max' ]
 				);
 			}
 		}
