@@ -362,44 +362,58 @@ class DBTable
 	static function getRowWithDataTypes($row,$fields_info )
 	{
 		$result = array();
+
 		foreach( $fields_info as $name=>$type )
 		{
 			if( !isset( $row[ $name ] ) || $row[ $name ] === null )
 			{
 				$result[ $name ] = null;
+				continue;
 			}
-			else
+
+			//Binary and has uuid in the name
+			if( ( $type == 254 ) & strpos( $name, 'uuid' ) )
 			{
-				switch( $type )
+				$text = bin2hex( $row[$name] );
+
+				$result[ $name ] = substr($text, 0, 8) . '-' .
+					substr($text, 8, 4) . '-' .
+					substr($text, 12, 4) . '-' .
+					substr($text, 16, 4) . '-' .
+					substr($text, 20);
+				continue;
+			}
+
+			switch( $type )
+			{
+				case 245: //json en otra parte
+				case 252: //json
 				{
-					case 245: //json en otra parte
-					case 252: //json
-						if( strpos($name,"json") === 0 )
-						{
-							$result[ $name ] = $row[$name] == null ? null : json_decode( $row[$name] );
-						}
-						else
-						{
-							$result[ $name ] = $row[ $name ];
-						}
-						break;
-					case 16: //bit
-					case 1: //tinyint bool
-					case 2: //smallint
-					case 3: //integer 3
-					case 9: //mediumint
-					case 8: //bigint serial
-							$result[ $name ] = intVal( $row[ $name ] );
-							break;
-					case 4: //float
-					case 5: //double
-					case 246: //decimal numeric 246
-							$result[ $name ] = floatVal( $row[ $name ] );
-							break;
-					default:
+					if( strpos($name,"json") === 0 )
+					{
+						$result[ $name ] = $row[$name] == null ? null : json_decode( $row[$name] );
+					}
+					else
+					{
 						$result[ $name ] = $row[ $name ];
-						break;
+					}
+					break;
 				}
+				case 16: //bit
+				case 1: //tinyint bool
+				case 2: //smallint
+				case 3: //integer 3
+				case 9: //mediumint
+				case 8: //bigint serial
+						$result[ $name ] = intVal( $row[ $name ] );
+						break;
+				case 4: //float
+				case 5: //double
+				case 246: //decimal numeric 246
+						$result[ $name ] = floatVal( $row[ $name ] );
+						break;
+				default:
+					$result[ $name ] = $row[ $name ];
 			}
 		}
 		return $result;
@@ -640,7 +654,6 @@ class DBTable
 
 		if( empty( $args ) || !is_array( $array ) )
 			return FALSE;
-
 		$class_name		= get_class($this);
 		$i				= 0;
 		foreach( $this as $name => $value )
@@ -740,7 +753,6 @@ class DBTable
 
 	function logSqlError()
 	{
-
 		if( $this->_conn->error )
 		{
 			error_log( $this->_conn->error );
