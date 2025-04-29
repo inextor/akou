@@ -1,8 +1,11 @@
 <?php
 //Never set LOG_LEVEL != LOG_LEVEL_TRACE inside this class
 //it breaks the internet
+
+
 namespace AKOU;
 
+include_once(__DIR__.'/ArrayUtils.php');
 
 class DBTable
 {
@@ -24,7 +27,6 @@ class DBTable
 	const NOT_NULL_SYMBOL = '@';
 	const NULL_SYMBOL = '_NULL';
 	const DIFFERENT_THAN_SYMBOL	= '!';
-
 
 	const UNSET_TRIMED_VALUES	= 1;
 	const UNSET_ZEROS			= 2;
@@ -327,6 +329,8 @@ class DBTable
 		$result = array();
 
 		$fields_info = DBTable::getFieldsInfo( $resSql );
+		error_log('Request ' .json_encode( $_REQUEST ) );
+		error_log('ULTIMOS --------------------'.$query );
 
 		while( $tmp_d = $resSql->fetch_assoc() )
 		{
@@ -372,7 +376,7 @@ class DBTable
 			}
 
 			//Binary and has uuid in the name
-			if( ( $type == 254 ) & strpos( $name, 'uuid' ) )
+			if( ( $type == 254 ) & strpos( $name, '_uuid' ) !== FALSE )
 			{
 				$text = bin2hex( $row[$name] );
 
@@ -428,6 +432,11 @@ class DBTable
 		$className	= static::getBaseClassName();
 		$asArray	= $className === 'DBTable';
 
+		if( strpos( ' 1>2 ', $sql ) )
+		{
+			return array();
+		}
+
 		$conn	= $connection ?: self::$connection;
 
 		try
@@ -461,6 +470,9 @@ class DBTable
 		$result = array();
 
 		$types_info = DBTable::$_parse_data_types ? DBTable::getFieldsInfo( $resSql ): NULL;
+
+		error_log('LAST ISSSSSSSSS--------------------------------------------'.$sql );
+
 
 		while( $data = $resSql->fetch_assoc() )
 		{
@@ -690,7 +702,8 @@ class DBTable
 		$_obj->assignFromArray( $array );
 		if( $_obj->insertDb() )
 			return $_obj;
-		$this->logSqlError();
+
+		$_obj->logSqlError();
 
 		return NULL;
 	}
@@ -788,6 +801,38 @@ class DBTable
 		}
 	}
 
+
+	static function isBinaryUUID(?string $string): bool
+	{
+		if( $string == null )
+		{
+			return false;
+		}
+
+		if (strlen($string) !== 36)
+		{
+			return false;
+		}
+
+		for ($i = 0; $i < 36; $i++)
+		{
+			$char = $string[$i];
+			if (in_array($i, [8, 13, 18, 23]))
+			{
+				if ($char !== '-')
+				{
+					return false;
+				}
+			}
+			elseif (!ctype_xdigit($char))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	function getInsertSql( $ignore = FALSE )
 	{
 		$array_fields	= array();
@@ -823,6 +868,13 @@ class DBTable
 					}
 				}
 
+				if( strpos( $name,'uuid') !== FALSE && static::isBinaryUUID( $this->{$name} ) )
+				{
+					$array_fields[] = '`'.$name.'`';
+					$array_values[] = $this->dbuuid( $this->{$name} );
+					continue;
+				}
+
 				if( strpos($name, 'json', 0 ) === 0 )
 				{
 					if( $this->{ $name } !== null )
@@ -840,7 +892,7 @@ class DBTable
 					$this->{$name}	= date( 'Y-m-d H:i:s' );
 					$array_values[] = '"'.$this->{$name}.'"';
 					$array_fields[] = '`'.$name.'`';
-					error_log('Adding '.$name.' with value'.print_r( $this->${name}, true ) );
+					error_log('Adding '.$name.' with value'.print_r( $this->${$name}, true ) );
 					continue;
 				}
 
@@ -985,7 +1037,8 @@ class DBTable
 
 		$result = false;
 
-		try{
+		try
+		{
 			$result = $this->_conn->query( $this->_lastQuery );
 		}
 		catch(\Exception $e)
@@ -999,6 +1052,7 @@ class DBTable
 					$lastIndex	= strrpos( $this->_conn->error,'\'' );
 					$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
 					error_log( 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<' );
+					error_log( $this->_conn->error );
 				}
 				else
 				{
@@ -1067,6 +1121,13 @@ class DBTable
 					{
 						$attr_flags			= $arrayFlags[ $name ];
 					}
+				}
+
+				if( strpos($name, '_uuid') !== FALSE && static::isBinaryUUID( $this->{$name} ) )
+				{
+					$update_array[] = '`'.$name.'`='.static::dbuuid( $this->{$name} );
+
+					error_log('asignado '.$name.'`='.static::dbuuid( $this->{$name}) ); continue;
 				}
 
 				if( strpos($name, 'json', 0 ) === 0 )
@@ -1766,12 +1827,26 @@ class DBTable
 				{
 					if( count( $value ) )
 					{
-						$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+						if( strpos( $key, '_uuid') !== FALSE && static::isBinaryUUID($value[0]))
+						{
+							$uuids = array();
+
+							foreach( $value as $v )
+							{
+								$uuids[] = static::dbuuid( $v ); //No need to escape
+							}
+
+							$constraints[] = '`'.$key.'` IN ('.join(',', $uuids).')';
+						}
+						else
+						{
+							$constraints[] = '`'.$key.'` IN ('.DBTable::escapeArrayValues( $value ).')';
+						}
 					}
 					else
 					{
 						//Is set but is empty is searching elements but are empty so none record must match
-						$constraints[] = '1>2';
+						$constraints[] = ' 1>2 ';
 						break;
 					}
 				}
@@ -1781,9 +1856,13 @@ class DBTable
 					{
 						$constraints[] = '`'.$key.'` IS NULL';
 					}
+					else if( strpos($key, '_uuid' ) !== FALSE && static::isBinaryUUID($value))
+					{
+						$constraints[] = '`'.$key.'`= '.static::dbuuid( $value );
+					}
 					else
 					{
-						$constraints[] = '`'.$key.'`= "'.DBTable::escape( $value ).'"';
+						$constraints[] = '`'.$key.'`="'.DBTable::escape( $value ).'"';
 					}
 				}
 			} //Comparing with the dirty comparisons ,LIKE not null,etc.
@@ -1807,17 +1886,33 @@ class DBTable
 				else if( static::endsWith( $key, DBTable::LT_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LT_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` < "'.static::escape( $array[ $key ] ).'"';
+
+					if( strpos( $f_key, '_uuid') !== FALSE && static::isBinaryUUID($array[ $key ]))
+					{
+						$constraints[] = '`'.$f_key.'` < '.static::dbuuid( $array[ $key ] );
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` < "'.static::escape( $array[ $key ] ).'"';
+					}
+
 				}
 				elseif( static::endsWith( $key, DBTable::LE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::LE_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'"';
+
+					if( strpos( $f_key, '_uuid') !== FALSE && static::isBinaryUUID($array[ $key ]))
+					{
+						$constraints[] = '`'.$f_key.'` <='.static::dbuuid( $array[ $key ] );
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` <= "'.static::escape( $array[ $key ] ).'"';
+					}
 				}
 				elseif( static::endsWith( $key, DBTable::DIFFERENT_THAN_SYMBOL) )
 				{
 					$f_key = str_replace( DBTable::DIFFERENT_THAN_SYMBOL, "", $key );
-
 
 					if( is_array( $array[ $key ] ) )
 					{
@@ -1827,7 +1922,21 @@ class DBTable
 						}
 						else
 						{
-							$constraints[] = '`'.$f_key.'` NOT IN ('.static::escapeArrayValues( $array[ $key ] ).')';
+							if( strpos( $f_key, '_uuid') !== FALSE && static::isBinaryUUID($array[ $key ]))
+							{
+								$uuids = array();
+
+								foreach( $array[ $key ] as $v )
+								{
+									$uuids[] = static::dbuuid( $v );
+								}
+
+								$constraints[] = '`'.$f_key.'` NOT IN ('.join(',', $uuids).')';
+							}
+							else
+							{
+								$constraints[] = '`'.$f_key.'` NOT IN ('.static::escapeArrayValues( $array[ $key ] ).')';
+							}
 						}
 					}
 					else
@@ -1838,12 +1947,28 @@ class DBTable
 				elseif( static::endsWith( $key, DBTable::GE_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::GE_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` >= "'.static::escape( $array[ $key ] ).'"';
+
+					if( strpos( $f_key, '_uuid') !== FALSE && static::isBinaryUUID($array[ $key ]))
+					{
+						$constraints[] = '`'.$f_key.'` >= '.static::dbuuid( $array[ $key ] );
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` >= "'.static::escape( $array[ $key ] ).'"';
+					}
 				}
 				elseif( static::endsWith( $key, DBTable::GT_SYMBOL ) )
 				{
 					$f_key = str_replace( DBTable::GT_SYMBOL, "", $key );
-					$constraints[] = '`'.$f_key.'` > "'.static::escape( $array[ $key ] ).'"';
+
+					if( strpos( $f_key, '_uuid') !== FALSE && static::isBinaryUUID($array[ $key ]))
+					{
+						$constraints[] = '`'.$f_key.'` > '.static::dbuuid( $array[ $key ] );
+					}
+					else
+					{
+						$constraints[] = '`'.$f_key.'` > "'.static::escape( $array[ $key ] ).'"';
+					}
 				}
 				elseif( static::endsWith( $key, DBTable::NULL_SYMBOL ) && $array[ $key ] )
 				{
@@ -2032,5 +2157,24 @@ class DBTable
 			error_log('Fail to write'.$values);
 			//Do nothing
 		}
+	}
+
+	function uuidToBinary(string $uuid): string
+	{
+		$uuidWithoutHyphens = str_replace('-', '', $uuid);
+		$binaryString = hex2bin($uuidWithoutHyphens);
+		return $binaryString;
+	}
+
+	public static function dbuuid(string $uuid):?string
+	{
+		if( $uuid == NULL )
+		{
+			return NULL;
+		}
+
+		$lower = preg_replace('/[^a-zA-Z0-9]/', '', strtolower( $uuid ) );
+
+		return '0x'.str_replace('-', '', $lower );
 	}
 }
