@@ -329,8 +329,6 @@ class DBTable
 		$result = array();
 
 		$fields_info = DBTable::getFieldsInfo( $resSql );
-		error_log('Request ' .json_encode( $_REQUEST ) );
-		error_log('ULTIMOS --------------------'.$query );
 
 		while( $tmp_d = $resSql->fetch_assoc() )
 		{
@@ -468,11 +466,7 @@ class DBTable
 		}
 
 		$result = array();
-
 		$types_info = DBTable::$_parse_data_types ? DBTable::getFieldsInfo( $resSql ): NULL;
-
-		error_log('LAST ISSSSSSSSS--------------------------------------------'.$sql );
-
 
 		while( $data = $resSql->fetch_assoc() )
 		{
@@ -718,16 +712,6 @@ class DBTable
 
 	function insert($ignore = false)
 	{
-		/*error_log('DENTRO DE LA LLAMAMADA');
-		if( $ignore )
-		{
-			error_log('IGNORE MTF');
-		}
-		else
-		{
-			error_log('Why are you ingoring me MTF?');
-		}
-		*/
 		return $this->insertDb( $ignore );
 	}
 
@@ -772,8 +756,6 @@ class DBTable
 			$class_name		= get_class( $this );
 			$this->_is_duplicated_error = $this->_conn->errno == 1062;
 
-			error_log('Error in '.$class_name );
-
 			if( $this->_is_duplicated_error )
 			{
 				error_log('Duplicate error');
@@ -786,7 +768,6 @@ class DBTable
 				$varName = substr( $this->_conn->error,$firstIndex,$lastIndex-$firstIndex);
 				$error_message = 'Error in "'.$class_name.'"->'.$varName.' And values >>>"'.($this->{$varName} ).'"<<<<<';
 
-				error_log( $this->_conn->error );
 				Utils::addLog
 				(
 					Utils::LOG_LEVEL_ERROR,
@@ -1820,7 +1801,6 @@ class DBTable
 			//Comparing with regular equal or in array
 			if( in_array( $key, $properties ) )
 			{
-
 				$value = $array[ $key ];
 
 				if( is_array( $array[ $key ] ) )

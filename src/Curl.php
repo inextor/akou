@@ -4,6 +4,31 @@ namespace AKOU;
 
 class Curl
 {
+	var $response_headers;
+	var $request_headers;
+	var $debug;
+	var $status_code;
+	var $user;
+	var $password;
+	var $timeout;
+	var $isMultipart;
+	var $http_auth;
+	var $follow_location;
+	var $custom_request;
+	var $url;
+	var $method;
+	var $files;
+	var $ssl_verify_peer;
+	var $response;
+	var $error;
+	var $raw_response;
+	var $postData;
+	var $fields;
+	var $user_agent;
+	var $curl;
+	var $info;
+	var $max_redirect;
+
 	function __construct( $url )
 	{
 		$this->response_headers 	= array();
@@ -167,6 +192,11 @@ class Curl
 			if( is_array( $this->postData ) )
 			{
  				$postString = http_build_query( $this->postData );
+			}
+
+			if( $this->debug )
+			{
+				error_log( 'CURL POST DATA: '.$postString );
 			}
 
 			\curl_setopt( $this->curl, CURLOPT_POSTFIELDS, $postString );

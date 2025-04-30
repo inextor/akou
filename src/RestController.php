@@ -151,6 +151,7 @@ class RestController
 		}
 		else
 		{
+			error_log('THIS IS NOT A VALID METHOD: '.$method );
 			http_response_code(405);
 			$this->setAllowHeader();
 		}

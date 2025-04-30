@@ -3,7 +3,6 @@ namespace AKOU;
 
 class ArrayUtils
 {
-
 	static function getArguments()
 	{
 		$num_args		= func_num_args();
@@ -106,7 +105,7 @@ class ArrayUtils
 				if( is_object( $item ) )
 				{
 					if( !empty( $item->{ $property } ) )
-							$result[$item->{ $property }] = true;
+						$result[$item->{ $property }] = true;
 				}
 				else if( !empty( $item[$property] ) )
 				{
@@ -178,6 +177,7 @@ class ArrayUtils
 		foreach( $array as $item )
 		{
 			$key = is_object( $item ) ? $item->{$prop } : $item[ $prop ];
+
 			if( isset( $result[ $key ] ) )
 				$result[ $key ][] = $item;
 			else

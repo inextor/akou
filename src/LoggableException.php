@@ -9,6 +9,7 @@ class LoggableException extends \Exception
 	public $tecnical_message;
 	public $date;
 	public $code;
+	public $function;
 
 	public function toArray()
 	{
@@ -218,7 +219,7 @@ class SessionException extends LoggableException
 
 class SystemException extends LoggableException
 {
-	public function __construct( $message, $tecnical_message = '', $code = 500, Exception $previous = null)
+	public function __construct( $message, $tecnical_message = '', $code = 500, \Exception $previous = null)
 	{
 		parent::__construct($message, $tecnical_message, $code, $previous);
 	}
