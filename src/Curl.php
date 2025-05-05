@@ -49,7 +49,7 @@ class Curl
 		$this->method			= 'GET';
 		$this->files			= array();
 		$this->ssl_verify_peer	= TRUE;
-		$this->response			= NULL;
+		$this->response			= '';
 		$this->error			= NULL;
 		$this->raw_response 	= NULL;
 	}
@@ -155,6 +155,12 @@ class Curl
 	{
 		$this->curl		= \curl_init();
 
+		if( $this->debug )
+		{
+			error_log('Setting Verbose');
+			curl_setopt($this->curl, CURLOPT_VERBOSE, true);
+		}
+
 		\curl_setopt( $this->curl, CURLOPT_URL,$this->url );
 		\curl_setopt( $this->curl, CURLOPT_RETURNTRANSFER, 1);
 
@@ -164,17 +170,16 @@ class Curl
 		}
 		else
 		{
-			 \curl_setopt( $this->curl , CURLOPT_HTTPGET, true );
-		}
-
-		if( $this->debug )
-		{
-			curl_setopt($this->curl, CURLOPT_VERBOSE, true);
+			\curl_setopt( $this->curl , CURLOPT_HTTPGET, true );
 		}
 
 		if( $this->custom_request )
 		{
-			 \curl_setopt( $this->curl , CURLOPT_CUSTOMREQUEST, $this->custom_request );
+			if( $this->debug )
+			{
+				error_log('Setting custom_request as "'.$this->custom_request.'"');
+			}
+			\curl_setopt( $this->curl , CURLOPT_CUSTOMREQUEST, $this->custom_request );
 		}
 
 		if( count( $this->files ) )
@@ -191,7 +196,7 @@ class Curl
 
 			if( is_array( $this->postData ) )
 			{
- 				$postString = http_build_query( $this->postData );
+				$postString = http_build_query( $this->postData );
 			}
 
 			if( $this->debug )
@@ -205,7 +210,7 @@ class Curl
 		}
 
 
-		if( !empty( $this->user_agent )  )
+		if( !empty( $this->user_agent ) )
 		{
 			\curl_setopt( $this->curl ,CURLOPT_USERAGENT ,$this->user_agent );
 		}
@@ -219,6 +224,10 @@ class Curl
 			}
 			else
 			{
+				if( $this->debug )
+				{
+					error_log('Setting User with Password');
+				}
 				\curl_setopt( $this->curl, CURLOPT_USERPWD, "$this->user:$this->password");
 				\curl_setopt( $this->curl, CURLOPT_HTTPAUTH, empty( $this->http_auth ) ? CURLAUTH_BASIC : $this->http_auth );
 			}
@@ -258,6 +267,11 @@ class Curl
 		$this->raw_response = \curl_exec( $this->curl );
 		$this->error	= \curl_error( $this->curl );
 		$header_size	= \curl_getinfo($this->curl , CURLINFO_HEADER_SIZE );
+
+		if( $this->debug )
+		{
+			error_log('CURL: header size '.$header_size);
+		}
 
 		$header			= \substr($this->raw_response, 0, $header_size);
 		$this->response	= \substr($this->raw_response, $header_size);
