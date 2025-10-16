@@ -8,7 +8,7 @@ class RestController
 	var $method_params;
 	var $response;
 	var $cors;
-
+	var $is_post_search_enabled = false;
 
 	function __construct()
 	{
@@ -82,6 +82,25 @@ class RestController
 		}
 
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
+
+		switch($method){
+			case 'patch':
+				$this->patch();
+				echo $this->response;
+				return;
+			break;
+		}
+
+		if( $this->is_post_search_enabled && $method == 'post')
+		{
+			$params = $this->getMethodParams();
+
+			if( !empty($params['_post_search'] ) )
+			{
+				$method = 'get';
+			}
+		}
+
 
 		if( $method === "get" || $method === "head" )
 		{
@@ -205,7 +224,7 @@ class RestController
 			$this->method_params = $_POST;
 			return $this->method_params;
 		}
-		
+
 		if( !empty( $_GET ) )
 		{
 			$this->method_params = $_GET;
