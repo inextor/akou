@@ -1,6 +1,8 @@
 <?php
 namespace AKOU;
 
+include_once( __DIR__.'/Utils.php');
+
 class LoggableException extends \Exception
 {
 	//public $file;
