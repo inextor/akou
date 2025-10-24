@@ -2,7 +2,6 @@
 //Never set LOG_LEVEL != LOG_LEVEL_TRACE inside this class
 //it breaks the internet
 
-
 namespace AKOU;
 
 include_once(__DIR__.'/ArrayUtils.php');
@@ -533,7 +532,6 @@ class DBTable
 
 	public static function createFromUniqArray( $array, $asTableName=null )
 	{
-
 		$_obj = new static();
 		$_obj->assignFromUniqueSelect( $array, $asTableName );
 
@@ -849,7 +847,7 @@ class DBTable
 					}
 				}
 
-				if( strpos( $name,'uuid') !== FALSE && static::isBinaryUUID( $this->{$name} ) )
+				if( strpos( $name,'_uuid') !== FALSE && static::isBinaryUUID( $this->{$name} ) )
 				{
 					$array_fields[] = '`'.$name.'`';
 					$array_values[] = $this->dbuuid( $this->{$name} );
