@@ -598,6 +598,10 @@ class DBTable
 
 		if( $only_id && property_exists( $name_class, 'id' ) && isset( $this->id ) )
 		{
+			if( is_array( $this->id ) )
+			{
+				error_log('WARNING PROBABLY BREAKING CONDITION FOR KEY '.$name.' is array'.self::getBaseClassName());
+			}
 			$this->_sqlCmp = '`id` = "'.$this->_conn->real_escape_string( $this->id??'' ).'"';
 			return;
 		}
@@ -612,7 +616,14 @@ class DBTable
 				if( $this->{$name} === NULL )
 					$cmp_a[] = '`'.$name.'` IS NULL';
 				else
+				{
+					if( is_array( $value ) )
+					{
+						error_log('WARNING PROBABLY BREAKING CONDITION FOR KEY '.$name.' is array');
+					}
+
 					$cmp_a[] = '`'.$name.'` = "'.$this->_conn->real_escape_string( $value ).'"';
+				}
 			}
 		}
 		$this->_sqlCmp = implode(' AND ',$cmp_a );
