@@ -211,10 +211,15 @@ class RestController
 			return $post_vars;
 		}
 
-		if( isset($_SERVER["CONTENT_TYPE"]) && $_SERVER["CONTENT_TYPE"] == 'application/json' )
+		if( isset($_SERVER["CONTENT_TYPE"]) && strpos($_SERVER["CONTENT_TYPE"], 'application/json') !== false )
 		{
-			$this->method_params = json_decode( file_get_contents("php://input"),true );
-			return $this->method_params;
+			$json_body = file_get_contents("php://input");
+
+			if( trim($json_body) !== '' )
+			{
+				$this->method_params = json_decode($json_body, true);
+				return $this->method_params;
+			}
 		}
 
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
